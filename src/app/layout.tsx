@@ -12,6 +12,9 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: "Phường Cao Lãnh",
   description: "Trang web quảng bá Phường Cao Lãnh",
+  icons: {
+    icon: "/Logo_TPCaoLanh.svg",
+  },
 };
 
 export default function RootLayout({
