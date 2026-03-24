@@ -64,6 +64,18 @@ const services: {
     href: "/dich-vu/2",
     description: "Mô tả dịch vụ 2.",
   },
+  {
+    id: 3,
+    title: "Dịch vụ 3",
+    href: "/dich-vu/3",
+    description: "Mô tả dịch vụ 3.",
+  },
+  {
+    id: 4,
+    title: "Dịch vụ 4",
+    href: "/dich-vu/4",
+    description: "Mô tả dịch vụ 4.",
+  },
 ];
 
 export function Navbar() {
@@ -117,7 +129,7 @@ export function Navbar() {
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
-        <Link href="/" className="">
+        <Link href="/dang-nhap" className="">
           <Button size="lg" className="text-lg" variant="outline">
             Đăng nhập
           </Button>

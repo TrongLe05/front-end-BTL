@@ -1,8 +1,8 @@
 import { Navbar } from "@/components/ui/Header/navbar";
 
-export default function header() {
+export default function Header() {
   return (
-    <header className=" p-4 shadow-sm bg-white">
+    <header className=" p-4 shadow-md bg-white">
       <Navbar />
     </header>
   );

@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import MapCard from "@/components/ui/CardMap/cardmap";
 export default function GioiThieu() {
   return (
