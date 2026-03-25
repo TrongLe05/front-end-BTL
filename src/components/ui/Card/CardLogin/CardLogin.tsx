@@ -16,7 +16,7 @@ import Link from "next/link";
 
 export default function CardLogin() {
   return (
-    <div className="flex items-center justify-center h-screen ">
+    <div className="flex min-h-screen items-center justify-center px-4 py-6">
       <Card className="w-full max-w-sm hover:shadow-2xl/50 transition-shadow">
         <CardHeader>
           <CardTitle className="text-xl font-bold">Đăng nhập</CardTitle>

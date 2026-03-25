@@ -1,8 +1,8 @@
-import CardLogin from "@/components/ui/CardLogin/CardLogin";
+import CardLogin from "@/components/ui/Card/CardLogin/CardLogin";
 
 export default function DangNhap() {
   return (
-    <div className="bg-[url('/cau-cao-lanh.jpg')] bg-cover bg-center h-screen">
+    <div className="relative left-1/2 right-1/2 -mx-[50vw] min-h-screen w-screen bg-[url('/cau-cao-lanh.jpg')] bg-cover bg-center">
       <CardLogin />
     </div>
   );
