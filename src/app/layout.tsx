@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
-import Header from "@/components/ui/Header/header";
-import Footer from "@/components/ui/Footer/footer";
 import "./globals.css";
 
 const roboto = Roboto({
@@ -24,13 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${roboto.className} flex flex-col min-h-screen`}>
-        <Header />
-
-        <main className="mx-auto w-full flex-1">{children}</main>
-
-        <Footer />
-      </body>
+      <body className={roboto.className}>{children}</body>
     </html>
   );
 }
