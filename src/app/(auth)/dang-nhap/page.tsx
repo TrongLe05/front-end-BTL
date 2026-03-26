@@ -1,6 +1,6 @@
 // app/(auth)/dang-nhap/page.tsx
 
-import CardLogin from "@/components/ui/Card/CardLogin/CardLogin";
+// import CardLogin from "@/components/ui/Card/CardLogin/CardLogin";
 import { LoginForm } from "@/components/login-form";
 export default function DangNhap() {
   return (

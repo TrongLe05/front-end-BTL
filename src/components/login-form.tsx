@@ -15,39 +15,14 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { error } from "console";
-
-const loginFormSchema = z.object({
-  email: z.string().email({ message: "Email không hợp lệ" }),
-  password: z.string().min(6, { message: "Mật khẩu phải có ít nhất 6 ký tự" }),
-});
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const form = useForm<z.infer<typeof loginFormSchema>>({
-    resolver: zodResolver(loginFormSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  const onSubmit = (data: z.infer<typeof loginFormSchema>) => {
-    // Xử lý đăng nhập ở đây, ví dụ: gọi API để xác thực người dùng
-    if (data) {
-      console.log("Dữ liệu đăng nhập:", data);
-    } else {
-      console.error("Dữ liệu không hợp lệ");
-    }
-  };
-
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -60,7 +35,7 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -68,13 +43,12 @@ export function LoginForm({
                   id="email"
                   type="email"
                   placeholder="mail@example.com"
-                  {...form.register("email")}
+                  autoComplete="email"
                 />
               </Field>
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Mật khẩu</FieldLabel>
-
                   <Link
                     href="#"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
@@ -87,7 +61,7 @@ export function LoginForm({
                 <Input
                   id="password"
                   type="password"
-                  {...form.register("password")}
+                  autoComplete="current-password"
                 />
               </Field>
               <Field>
