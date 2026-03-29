@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function Hero() {
   return (
-    <section className="relative flex h-72 items-center justify-center overflow-hidden text-white sm:h-80 md:h-96">
+    <section className="relative flex h-72 items-center justify-center overflow-hidden text-white sm:h-80 md:h-96 ">
       <Image
         // src="/Cầu_Cao_Lãnh.jpg"
         src="/cau-cao-lanh-2.jpg"

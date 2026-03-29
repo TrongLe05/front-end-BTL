@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -57,45 +57,104 @@ const components: {
     href: "/tin-tuc",
     description: "Cập nhật tin tức mới nhất về Phường Cao Lãnh.",
   },
+  {
+    id: 5,
+    title: "Thư viện",
+    href: "/thu-vien",
+    description: "Thư viện hình ảnh và tài liệu về Phường Cao Lãnh.",
+  },
 ];
 
-const services: {
-  id: number;
-  title: string;
-  href: string;
+type Service = {
+  serviceId: number;
+  name: string;
   description: string;
-}[] = [
-  {
-    id: 1,
-    title: "Dịch vụ 1",
-    href: "/dich-vu/1",
-    description: "Mô tả dịch vụ 1.",
-  },
-  {
-    id: 2,
-    title: "Dịch vụ 2",
-    href: "/dich-vu/2",
-    description: "Mô tả dịch vụ 2.",
-  },
-  {
-    id: 3,
-    title: "Dịch vụ 3",
-    href: "/dich-vu/3",
-    description: "Mô tả dịch vụ 3.",
-  },
-  {
-    id: 4,
-    title: "Dịch vụ 4",
-    href: "/dich-vu/4",
-    description: "Mô tả dịch vụ 4.",
-  },
-];
+  procedureDetails?: string;
+  isActive: boolean;
+};
 
 export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [services, setServices] = useState<Service[]>([]);
+  const hasFetchedServices = useRef(false);
   const router = useRouter();
 
+  const apiBaseUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5265";
+
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  useEffect(() => {
+    if (hasFetchedServices.current) {
+      return;
+    }
+
+    hasFetchedServices.current = true;
+    let isMounted = true;
+
+    const cacheKey = "navbar_services_v1";
+    const cacheTtlMs = 5 * 60 * 1000;
+
+    try {
+      const cachedRaw = sessionStorage.getItem(cacheKey);
+      if (cachedRaw) {
+        const cached: { timestamp: number; data: Service[] } =
+          JSON.parse(cachedRaw);
+        const isFresh = Date.now() - cached.timestamp < cacheTtlMs;
+
+        if (isFresh && Array.isArray(cached.data) && cached.data.length > 0) {
+          setServices(cached.data);
+        }
+      }
+    } catch {
+      // Ignore cache parsing errors and continue with network request.
+    }
+
+    const loadServices = async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/Services`, {
+          headers: { Accept: "application/json" },
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to load services: ${response.status}`);
+        }
+
+        const data: Service[] = await response.json();
+        const activeServices = data.filter((service) => service.isActive);
+
+        if (isMounted) {
+          setServices(activeServices);
+        }
+
+        try {
+          sessionStorage.setItem(
+            cacheKey,
+            JSON.stringify({
+              timestamp: Date.now(),
+              data: activeServices,
+            }),
+          );
+        } catch {
+          // Ignore storage quota errors.
+        }
+      } catch (error) {
+        console.error("Cannot fetch services", error);
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    };
+
+    loadServices();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [apiBaseUrl]);
 
   return (
     <div className="relative">
@@ -113,7 +172,7 @@ export function Navbar() {
           </span>
         </Link>
 
-        <NavigationMenu className="hidden md:block">
+        <NavigationMenu viewport={false} className="hidden md:block">
           <NavigationMenuList className="gap-2">
             {components.map((component) => (
               <NavigationMenuItem key={component.id}>
@@ -125,18 +184,25 @@ export function Navbar() {
                 </NavigationMenuLink>
               </NavigationMenuItem>
             ))}
+
             <NavigationMenuItem>
-              <NavigationMenuTrigger className="text-lg">
+              <NavigationMenuTrigger className="text-lg hover:text-pink-600 hover:bg-pink-100 focus:bg-pink-100 focus:text-pink-600">
                 Dịch vụ
               </NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid w-80 gap-2 md:w-96 md:grid-cols-2 lg:w-96">
+              <NavigationMenuContent className="z-50 md:left-auto md:right-0">
+                <ul className="grid w-1000 gap-2 md:w-96 md:grid-cols-2 lg:w-96">
                   {services.map((service) => (
-                    <NavigationMenuLink key={service.id} asChild>
-                      <Link href={`/dich-vu/${service.id}`}>
+                    <NavigationMenuLink
+                      key={service.serviceId}
+                      className="hover:text-pink-600 hover:bg-pink-100"
+                      asChild
+                    >
+                      <Link
+                        href={`/dich-vu/${service.serviceId}?name=${encodeURIComponent(service.name)}`}
+                      >
                         <div className="flex flex-col gap-1 text-base">
                           <div className="leading-none font-medium">
-                            {service.title}
+                            {service.name}
                           </div>
                           <div className="line-clamp-2 text-muted-foreground">
                             {service.description}
@@ -183,7 +249,14 @@ export function Navbar() {
             <div className="px-3">
               <Select
                 onValueChange={(value) => {
-                  router.push(`/dich-vu/${value}`);
+                  const selectedService = services.find(
+                    (service) => service.serviceId.toString() === value,
+                  );
+                  const serviceQuery = selectedService
+                    ? `?name=${encodeURIComponent(selectedService.name)}`
+                    : "";
+
+                  router.push(`/dich-vu/${value}${serviceQuery}`);
                   closeMobileMenu();
                 }}
               >
@@ -194,10 +267,10 @@ export function Navbar() {
                   <SelectGroup>
                     {services.map((service) => (
                       <SelectItem
-                        key={service.id}
-                        value={service.id.toString()}
+                        key={service.serviceId}
+                        value={service.serviceId.toString()}
                       >
-                        {service.title}
+                        {service.name}
                       </SelectItem>
                     ))}
                   </SelectGroup>

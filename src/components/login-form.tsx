@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -25,14 +26,17 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
+      <Card className="w-full max-w-sm hover:shadow-2xl/50 transition-shadow">
         <CardHeader>
-          <CardTitle className="flex justify-center text-2xl font-bold">
-            Đăng nhập
-          </CardTitle>
-          <CardDescription className="flex justify-center">
-            Nhập Email và mật khẩu của bạn để đăng nhập
+          <CardTitle className="text-xl font-bold">Đăng nhập</CardTitle>
+          <CardDescription>
+            Nhập email của bạn bên dưới để đăng nhập vào tài khoản
           </CardDescription>
+          <CardAction>
+            <Link href="/">
+              <Button variant="link">Trở về trang chủ</Button>
+            </Link>
+          </CardAction>
         </CardHeader>
         <CardContent>
           <form>

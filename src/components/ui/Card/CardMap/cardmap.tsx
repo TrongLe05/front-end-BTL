@@ -2,9 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function MapCard() {
   return (
-    <Card className="w-full max-w-3xl shadow-md border">
+    <Card className="w-full max-w-3xl">
       <CardHeader>
-        <CardTitle className="text-lg">Vị trí Phường Cao Lãnh</CardTitle>
+        <CardTitle className="text-lg font-semibold">
+          Vị trí Phường Cao Lãnh
+        </CardTitle>
       </CardHeader>
 
       <CardContent>

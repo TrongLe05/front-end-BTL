@@ -16,9 +16,9 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer className="bg-muted mt-5">
-      <div className="container mx-auto px-6 py-10 grid md:grid-cols-3 gap-6">
+      <div className="container mx-auto px-6 py-10 flex flex-col gap-6 md:flex-row md:items-stretch">
         {/* Cột 1 */}
-        <div>
+        <div className="md:flex-1">
           <h2 className="font-bold text-xl">Phường Cao Lãnh</h2>
           <p className="text-sm text-muted-foreground mt-2">
             Trang web quảng bá Phường Cao Lãnh, cung cấp thông tin về lịch sử,
@@ -26,8 +26,10 @@ export default function Footer() {
           </p>
         </div>
 
+        <Separator orientation="vertical" className="hidden md:block" />
+
         {/* Cột 2 */}
-        <div>
+        <div className="md:flex-1">
           <h2 className="font-semibold text-xl">Liên kết</h2>
           <ul className="mt-2 space-y-2 text-base">
             <li>
@@ -61,8 +63,10 @@ export default function Footer() {
           </ul>
         </div>
 
+        <Separator orientation="vertical" className="hidden md:block" />
+
         {/* Cột 3 */}
-        <div>
+        <div className="md:flex-1">
           <h2 className="font-semibold text-xl">Liên hệ</h2>
           <p className="flex items-center gap-2 text-base">
             <MapPin size={16} /> Phường Cao Lãnh, Đồng Tháp
