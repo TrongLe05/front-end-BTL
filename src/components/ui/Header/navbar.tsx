@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 
 import {
@@ -78,6 +78,15 @@ export function Navbar() {
   const [services, setServices] = useState<Service[]>([]);
   const hasFetchedServices = useRef(false);
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isRouteActive = (href: string) => {
+    if (href === "/") {
+      return pathname === "/";
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   const apiBaseUrl =
     process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5265";
@@ -178,7 +187,11 @@ export function Navbar() {
               <NavigationMenuItem key={component.id}>
                 <NavigationMenuLink
                   asChild
-                  className={`${navigationMenuTriggerStyle()} text-lg`}
+                  className={`${navigationMenuTriggerStyle()} text-lg ${
+                    isRouteActive(component.href)
+                      ? "bg-pink-100 text-pink-600"
+                      : ""
+                  }`}
                 >
                   <Link href={component.href}>{component.title}</Link>
                 </NavigationMenuLink>
@@ -241,7 +254,9 @@ export function Navbar() {
                 key={item.id}
                 href={item.href}
                 onClick={closeMobileMenu}
-                className="rounded-md px-3 py-2 text-base font-medium hover:bg-muted"
+                className={`rounded-md px-3 py-2 text-base font-medium hover:bg-muted ${
+                  isRouteActive(item.href) ? "bg-pink-100 text-pink-600" : ""
+                }`}
               >
                 {item.title}
               </Link>

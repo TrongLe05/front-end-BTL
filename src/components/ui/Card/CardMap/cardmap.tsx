@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function MapCard() {
+function CardMap() {
   return (
     <Card className="w-full max-w-3xl">
       <CardHeader>
@@ -23,3 +23,5 @@ export default function MapCard() {
     </Card>
   );
 }
+
+export default CardMap;

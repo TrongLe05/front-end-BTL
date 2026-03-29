@@ -80,7 +80,7 @@ export function LoginForm({
 
                 <FieldDescription className="text-center">
                   Chưa có tài khoản?
-                  <Link href="#">
+                  <Link href="/dang-ky">
                     <Button variant="link" className="ml-auto p-1">
                       Đăng ký
                     </Button>
