@@ -17,9 +17,11 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { getApiBaseUrl } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import Link from "next/dist/client/link";
+import { toast } from "sonner";
 
 export default function RecoveryForm({
   className,
@@ -27,12 +29,42 @@ export default function RecoveryForm({
 }: React.ComponentProps<"div">) {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!email.trim()) return;
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
+      toast.error("Vui lòng nhập email.");
+      return;
+    }
 
-    router.push(`/xac-minh-otp?email=${encodeURIComponent(email.trim())}`);
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/Auth/forgot-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
+
+      const payload = await response.json().catch(() => null);
+      const message = payload?.message ?? payload?.Message;
+
+      if (!response.ok) {
+        toast.error(message ?? "Không thể gửi OTP. Vui lòng thử lại.");
+        return;
+      }
+
+      toast.success(message ?? "Đã gửi OTP. Vui lòng kiểm tra email.");
+      router.push(`/xac-minh-otp?email=${encodeURIComponent(normalizedEmail)}`);
+    } catch {
+      toast.error("Không kết nối được tới máy chủ. Vui lòng thử lại sau.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -61,14 +93,15 @@ export default function RecoveryForm({
                   autoComplete="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
+                  disabled={isSubmitting}
                   required
                 />
                 <FieldError />
               </Field>
 
               <Field>
-                <Button type="submit" className="w-full">
-                  Gửi mã OTP
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? "Đang gửi OTP..." : "Gửi mã OTP"}
                 </Button>
               </Field>
             </FieldGroup>

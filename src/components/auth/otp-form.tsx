@@ -28,6 +28,8 @@ import {
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getApiBaseUrl } from "@/lib/auth";
+import { toast } from "sonner";
 
 type OTPFormProps = {
   email?: string;
@@ -37,9 +39,17 @@ export function OTPForm({ email = "m@example.com" }: OTPFormProps) {
   const router = useRouter();
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
-  const handleVerifyOTP = (event: FormEvent<HTMLFormElement>) => {
+  const handleVerifyOTP = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
+      setError("Không tìm thấy email để xác thực OTP.");
+      return;
+    }
 
     if (otp.length !== 6) {
       setError("Vui lòng nhập đầy đủ 6 số OTP.");
@@ -47,7 +57,76 @@ export function OTPForm({ email = "m@example.com" }: OTPFormProps) {
     }
 
     setError(null);
-    router.push(`/tao-mat-khau?email=${encodeURIComponent(email)}`);
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/Auth/verify-otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          otp,
+        }),
+      });
+
+      const payload = await response.json().catch(() => null);
+      const message = payload?.message ?? payload?.Message;
+
+      if (!response.ok) {
+        setError(message ?? "Mã OTP không hợp lệ.");
+        return;
+      }
+
+      toast.success(message ?? "Xác thực OTP thành công.");
+      router.push(
+        `/tao-mat-khau?email=${encodeURIComponent(normalizedEmail)}&otp=${encodeURIComponent(otp)}`,
+      );
+    } catch {
+      setError("Không kết nối được tới máy chủ. Vui lòng thử lại sau.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
+      setError("Không tìm thấy email để gửi lại OTP.");
+      return;
+    }
+
+    setError(null);
+    setIsResending(true);
+    try {
+      const response = await fetch(
+        `${getApiBaseUrl()}/api/Auth/forgot-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ email: normalizedEmail }),
+        },
+      );
+
+      const payload = await response.json().catch(() => null);
+      const message = payload?.message ?? payload?.Message;
+
+      if (!response.ok) {
+        setError(message ?? "Không thể gửi lại OTP.");
+        return;
+      }
+
+      toast.success(message ?? "Đã gửi lại OTP.");
+    } catch {
+      setError("Không kết nối được tới máy chủ. Vui lòng thử lại sau.");
+    } finally {
+      setIsResending(false);
+    }
   };
 
   return (
@@ -69,9 +148,15 @@ export function OTPForm({ email = "m@example.com" }: OTPFormProps) {
           <Field>
             <div className="flex items-center justify-between">
               <FieldLabel htmlFor="otp-verification">Mã xác minh</FieldLabel>
-              <Button variant="outline" size="xs" type="button">
+              <Button
+                variant="outline"
+                size="xs"
+                type="button"
+                onClick={handleResendOtp}
+                disabled={isResending || isSubmitting}
+              >
                 <RefreshCwIcon />
-                Gửi lại mã
+                {isResending ? "Đang gửi..." : "Gửi lại mã"}
               </Button>
             </div>
 
@@ -113,9 +198,9 @@ export function OTPForm({ email = "m@example.com" }: OTPFormProps) {
             <Button
               type="submit"
               className="w-full"
-              disabled={otp.length !== 6}
+              disabled={otp.length !== 6 || isSubmitting}
             >
-              Xác minh
+              {isSubmitting ? "Đang xác minh..." : "Xác minh"}
             </Button>
             <div className="text-sm text-muted-foreground">
               Bạn gặp sự cố khi đăng nhập?{" "}

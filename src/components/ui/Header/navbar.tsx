@@ -26,6 +26,12 @@ import {
 } from "@/components/ui/select";
 
 import { Button } from "@/components/ui/button";
+import {
+  clearAuthSession,
+  getAuthSnapshot,
+  hasDashboardAccess,
+  hydrateAuthCookiesFromStorage,
+} from "@/lib/auth";
 
 const components: {
   id: number;
@@ -76,9 +82,13 @@ type Service = {
 export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [services, setServices] = useState<Service[]>([]);
+  const [authRole, setAuthRole] = useState<string | null>(null);
   const hasFetchedServices = useRef(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  const isAuthenticated = authRole !== null;
+  const canAccessAdmin = isAuthenticated && hasDashboardAccess(authRole ?? "");
 
   const isRouteActive = (href: string) => {
     if (href === "/") {
@@ -92,6 +102,37 @@ export function Navbar() {
     process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5265";
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  const handleLogout = () => {
+    clearAuthSession();
+    setAuthRole(null);
+    closeMobileMenu();
+    router.push("/");
+    router.refresh();
+  };
+
+  useEffect(() => {
+    const syncAuthState = () => {
+      hydrateAuthCookiesFromStorage();
+      const { token, role } = getAuthSnapshot();
+
+      if (!token) {
+        setAuthRole(null);
+        return;
+      }
+
+      setAuthRole(role ?? "");
+    };
+
+    syncAuthState();
+    window.addEventListener("storage", syncAuthState);
+    window.addEventListener("focus", syncAuthState);
+
+    return () => {
+      window.removeEventListener("storage", syncAuthState);
+      window.removeEventListener("focus", syncAuthState);
+    };
+  }, [pathname]);
 
   useEffect(() => {
     if (hasFetchedServices.current) {
@@ -124,7 +165,7 @@ export function Navbar() {
       const timeoutId = setTimeout(() => controller.abort(), 4000);
 
       try {
-        const response = await fetch(`${apiBaseUrl}/api/Services`, {
+        const response = await fetch(`${apiBaseUrl}/api/Service`, {
           headers: { Accept: "application/json" },
           signal: controller.signal,
         });
@@ -230,11 +271,32 @@ export function Navbar() {
           </NavigationMenuList>
         </NavigationMenu>
 
-        <Link href="/dang-nhap" className="hidden md:block">
-          <Button size="lg" className="text-lg" variant="outline">
-            Đăng nhập
-          </Button>
-        </Link>
+        <div className="hidden items-center gap-2 md:flex">
+          {canAccessAdmin ? (
+            <Link href="/dashboard">
+              <Button size="lg" className="text-lg" variant="secondary">
+                Quản trị
+              </Button>
+            </Link>
+          ) : null}
+
+          {isAuthenticated ? (
+            <Button
+              size="lg"
+              className="text-lg"
+              variant="outline"
+              onClick={handleLogout}
+            >
+              Đăng xuất
+            </Button>
+          ) : (
+            <Link href="/dang-nhap">
+              <Button size="lg" className="text-lg" variant="outline">
+                Đăng nhập
+              </Button>
+            </Link>
+          )}
+        </div>
 
         <button
           type="button"
@@ -293,11 +355,37 @@ export function Navbar() {
               </Select>
             </div>
 
-            <Link href="/dang-nhap" onClick={closeMobileMenu} className="mt-3">
-              <Button className="w-full" variant="outline">
-                Đăng nhập
+            {canAccessAdmin ? (
+              <Link
+                href="/dashboard"
+                onClick={closeMobileMenu}
+                className="mt-3"
+              >
+                <Button className="w-full" variant="secondary">
+                  Quản trị
+                </Button>
+              </Link>
+            ) : null}
+
+            {isAuthenticated ? (
+              <Button
+                className="mt-3 w-full"
+                variant="outline"
+                onClick={handleLogout}
+              >
+                Đăng xuất
               </Button>
-            </Link>
+            ) : (
+              <Link
+                href="/dang-nhap"
+                onClick={closeMobileMenu}
+                className="mt-3"
+              >
+                <Button className="w-full" variant="outline">
+                  Đăng nhập
+                </Button>
+              </Link>
+            )}
           </nav>
         </div>
       ) : null}
