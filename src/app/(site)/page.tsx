@@ -97,7 +97,6 @@ export default function Home() {
                   width={650}
                   height={450}
                   className="mx-auto rounded-md object-cover"
-                  style={{ height: "auto" }}
                 />
                 <figcaption className="mt-2 text-sm text-muted-foreground">
                   Bản đồ hành chính phường Cao Lãnh
