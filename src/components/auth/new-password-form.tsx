@@ -79,6 +79,7 @@ export default function NewPasswordForm({
             email: normalizedEmail,
             otp: normalizedOtp,
             newPassword: password,
+            confirmPassword,
           }),
         },
       );
