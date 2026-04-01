@@ -1,5 +1,6 @@
 import { getArticleById } from "@/lib/api/article";
 import { Article } from "@/types";
+import Image from "next/image";
 
 type DetailPageProps = {
   params: Promise<{
@@ -32,7 +33,7 @@ export default async function TinTucDetailPage({ params }: DetailPageProps) {
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
       <h1 className="text-3xl font-bold">{article.title}</h1>
-
+      {/* <Image src={article.thumbnailUrl} alt={article.title} width={800} height={450} /> */}
       {article.summary ? (
         <p className="mt-3 text-muted-foreground">{article.summary}</p>
       ) : null}

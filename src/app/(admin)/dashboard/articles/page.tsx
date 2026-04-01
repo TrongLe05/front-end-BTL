@@ -1,11 +1,12 @@
 import { Suspense } from "react";
-import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarArticle } from "@/components/admin/article/sidebar-article";
 import { SiteHeaderArticle } from "@/components/admin/article/site-header-article";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { ArticleForm } from "@/components/admin/article/article-form";
 // import { CategoryTable } from "@/components/admin/article/category-table";
 import { ArticleTable } from "@/components/admin/article/article-table";
 import { getCategories, getArticles } from "@/lib/api/article";
+import { Sidebar } from "lucide-react";
 
 async function ArticlePageContent() {
   const [categories, articles] = await Promise.all([
@@ -59,7 +60,7 @@ export default function Page() {
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" />
+      <SidebarArticle variant="inset" />
       <SidebarInset>
         <SiteHeaderArticle />
         <Suspense fallback={<LoadingFallback />}>

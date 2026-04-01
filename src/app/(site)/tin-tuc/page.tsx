@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getArticles } from "@/lib/api/article";
 import { Article } from "@/types";
+import Image from "next/image";
 
 export default async function TinTuc() {
   const articles = (await getArticles()) as Article[];
@@ -20,6 +21,15 @@ export default async function TinTuc() {
           {articles.map((article) => (
             <article key={article.articleId} className="rounded-lg border p-4">
               <h2 className="text-xl font-semibold">{article.title}</h2>
+              {article.thumbnailUrl ? (
+                <Image
+                  src={`/${article.thumbnailUrl}`}
+                  alt={article.title}
+                  width={800}
+                  height={450}
+                  className="w-full "
+                />
+              ) : null}
               {article.summary ? (
                 <p className="mt-2 text-sm text-muted-foreground">
                   {article.summary}

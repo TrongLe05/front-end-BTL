@@ -271,8 +271,8 @@ export function ArticleForm({ categories, onSuccess }: ArticleFormProps) {
               name="thumbnailUrl"
               value={formData.thumbnailUrl}
               onChange={handleInputChange}
-              placeholder="https://example.com/image.jpg"
-              type="url"
+              placeholder="Tải ảnh lên .."
+              type="file"
             />
           </div>
 
