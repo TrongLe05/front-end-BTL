@@ -41,6 +41,7 @@ export function OTPForm({ email = "m@example.com" }: OTPFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const hasOtpError = Boolean(error);
 
   const handleVerifyOTP = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -159,30 +160,55 @@ export function OTPForm({ email = "m@example.com" }: OTPFormProps) {
                 {isResending ? "Đang gửi..." : "Gửi lại mã"}
               </Button>
             </div>
-
-            <InputOTP
-              maxLength={6}
-              id="otp-verification"
-              required
-              containerClassName="justify-center"
-              value={otp}
-              onChange={(value) => {
-                setOtp(value);
-                if (error) setError(null);
-              }}
-            >
-              <InputOTPGroup>
-                <InputOTPSlot index={0} className="h-12 w-11 text-xl" />
-                <InputOTPSlot index={1} className="h-12 w-11 text-xl" />
-                <InputOTPSlot index={2} className="h-12 w-11 text-xl" />
-              </InputOTPGroup>
-              <InputOTPSeparator className="mx-2" />
-              <InputOTPGroup>
-                <InputOTPSlot index={3} className="h-12 w-11 text-xl" />
-                <InputOTPSlot index={4} className="h-12 w-11 text-xl" />
-                <InputOTPSlot index={5} className="h-12 w-11 text-xl" />
-              </InputOTPGroup>
-            </InputOTP>
+            <div className="my-2">
+              <InputOTP
+                maxLength={6}
+                id="otp-verification"
+                required
+                containerClassName="justify-center"
+                value={otp}
+                onChange={(value) => {
+                  setOtp(value);
+                  if (error) setError(null);
+                }}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot
+                    index={0}
+                    aria-invalid={hasOtpError}
+                    className="h-12 w-11 text-xl"
+                  />
+                  <InputOTPSlot
+                    index={1}
+                    aria-invalid={hasOtpError}
+                    className="h-12 w-11 text-xl"
+                  />
+                  <InputOTPSlot
+                    index={2}
+                    aria-invalid={hasOtpError}
+                    className="h-12 w-11 text-xl"
+                  />
+                </InputOTPGroup>
+                <InputOTPSeparator className="mx-2" />
+                <InputOTPGroup>
+                  <InputOTPSlot
+                    index={3}
+                    aria-invalid={hasOtpError}
+                    className="h-12 w-11 text-xl"
+                  />
+                  <InputOTPSlot
+                    index={4}
+                    aria-invalid={hasOtpError}
+                    className="h-12 w-11 text-xl"
+                  />
+                  <InputOTPSlot
+                    index={5}
+                    aria-invalid={hasOtpError}
+                    className="h-12 w-11 text-xl"
+                  />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
 
             <FieldError>{error}</FieldError>
 

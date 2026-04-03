@@ -1,11 +1,10 @@
 import { ArticleRequest, Category } from "@/types";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function getCategories(): Promise<Category[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/Category`, {
+    const response = await fetch(`${API_BASE_URL}/admin/categories`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

@@ -4,6 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Category, ArticleRequest } from "@/types";
 import { createArticle } from "@/lib/api/article";
+import { getCurrentUserId } from "@/lib/auth";
 import { revalidateArticles } from "@/app/(admin)/articles/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,13 +47,14 @@ export function ArticleForm({ categories, onSuccess }: ArticleFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const currentUserId = getCurrentUserId();
 
   const editorRef = useRef<TinyEditorHandle | null>(null);
   const contentRef = useRef("");
 
   const [formData, setFormData] = useState<ArticleRequest>({
     categoryId: 0,
-    authorId: 1, // Có thể lấy từ auth context
+    authorId: currentUserId ?? 0,
     title: "",
     summary: "",
     content: "",
@@ -91,8 +93,15 @@ export function ArticleForm({ categories, onSuccess }: ArticleFormProps) {
     setSuccess(false);
 
     try {
+      if (!currentUserId) {
+        setError("Không xác định được tài khoản đăng nhập. Vui lòng đăng nhập lại.");
+        setLoading(false);
+        return;
+      }
+
       const payload: ArticleRequest = {
         ...formData,
+        authorId: currentUserId,
         content: contentRef.current,
       };
 
@@ -110,7 +119,7 @@ export function ArticleForm({ categories, onSuccess }: ArticleFormProps) {
         setSuccess(true);
         setFormData({
           categoryId: 0,
-          authorId: 1,
+          authorId: currentUserId,
           title: "",
           summary: "",
           content: "",
@@ -301,7 +310,7 @@ export function ArticleForm({ categories, onSuccess }: ArticleFormProps) {
             onClick={() => {
               setFormData({
                 categoryId: 0,
-                authorId: 1,
+                authorId: currentUserId ?? 0,
                 title: "",
                 summary: "",
                 content: "",

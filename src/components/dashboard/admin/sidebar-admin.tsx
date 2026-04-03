@@ -3,8 +3,9 @@
 import * as React from "react";
 
 // import { NavDocuments } from "@/components/nav-documents";
-import { NavMain } from "@/components/nav-main";
+import { NavMainAdmin } from "@/components/dashboard/admin/nav-main-admin";
 import { NavSecondary } from "@/components/nav-secondary";
+import { NavDocuments } from "@/components/nav-documents";
 import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
@@ -20,69 +21,42 @@ import {
   Settings2Icon,
   CircleHelpIcon,
   SearchIcon,
+  Newspaper,
+  Users,
+  FolderTree,
+  DatabaseIcon,
+  FileChartColumnIcon,
+  FileIcon,
 } from "lucide-react";
 
 const data = {
   user: {
     name: "shadcn",
     email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    avatar: "/avatar.png",
   },
   navMain: [
     {
-      title: "Quản lý bài viết",
-      url: "#",
+      title: "Dashboard",
+      url: "",
       icon: <LayoutDashboardIcon />,
     },
+    {
+      title: "Quản lý bài viết",
+      url: "/quan-ly-bai-viet",
+      icon: <Newspaper />,
+    },
+    {
+      title: "Quản lý tài khoản",
+      url: "/quan-ly-tai-khoan",
+      icon: <Users />,
+    },
+    {
+      title: "Quản lý danh mục",
+      url: "/quan-ly-danh-muc",
+      icon: <FolderTree />,
+    },
   ],
-  //   navClouds: [
-  //     {
-  //       title: "Capture",
-  //       icon: <CameraIcon />,
-  //       isActive: true,
-  //       url: "#",
-  //       items: [
-  //         {
-  //           title: "Active Proposals",
-  //           url: "#",
-  //         },
-  //         {
-  //           title: "Archived",
-  //           url: "#",
-  //         },
-  //       ],
-  //     },
-  //     {
-  //       title: "Proposal",
-  //       icon: <FileTextIcon />,
-  //       url: "#",
-  //       items: [
-  //         {
-  //           title: "Active Proposals",
-  //           url: "#",
-  //         },
-  //         {
-  //           title: "Archived",
-  //           url: "#",
-  //         },
-  //       ],
-  //     },
-  //     {
-  //       title: "Prompts",
-  //       icon: <FileTextIcon />,
-  //       url: "#",
-  //       items: [
-  //         {
-  //           title: "Active Proposals",
-  //           url: "#",
-  //         },
-  //         {
-  //           title: "Archived",
-  //           url: "#",
-  //         },
-  //       ],
-  //     },
-  //   ],
   navSecondary: [
     {
       title: "Settings",
@@ -100,26 +74,25 @@ const data = {
       icon: <SearchIcon />,
     },
   ],
-  //   documents: [
-  //     {
-  //       name: "Data Library",
-  //       url: "#",
-  //       icon: <DatabaseIcon />,
-  //     },
-  //     {
-  //       name: "Reports",
-  //       url: "#",
-  //       icon: <FileChartColumnIcon />,
-  //     },
-  //     {
-  //       name: "Word Assistant",
-  //       url: "#",
-  //       icon: <FileIcon />,
-  //     },
-  //   ],
+  documents: [
+    {
+      name: "Quản lý thủ tục hành chính",
+      url: "#",
+      icon: <DatabaseIcon />,
+    },
+    {
+      name: "Quản lý hồ sơ",
+      url: "#",
+      icon: <FileChartColumnIcon />,
+    },
+    {
+      name: "Cập nhật trạng thái",
+      url: "#",
+      icon: <FileIcon />,
+    },
+  ],
 };
-
-export function SidebarArticle({
+export function SidebarAdmin({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -141,12 +114,15 @@ export function SidebarArticle({
                 <span className="text-xl font-bold">Phường Cao Lãnh</span>
               </a>
             </SidebarMenuButton>
+            <div className="text-sm text-muted-foreground ">
+              <p>Quản lý hệ thống</p>
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        {/* <NavDocuments items={data.documents} /> */}
+        <NavMainAdmin items={data.navMain} />
+        <NavDocuments items={data.documents} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

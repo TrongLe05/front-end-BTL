@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-const DASHBOARD_ROLE_KEYS = new Set(["admin", "editor", "staff", "lanhdao"]);
+const DASHBOARD_ROLE_KEYS = new Set(["admin", "editor", "viewer"]);
 
 function normalizeRole(role: string): string {
   return role

@@ -17,8 +17,20 @@ type AuthSnapshot = {
   role: string | null;
 };
 
-const DASHBOARD_ROLE_KEYS = new Set(["admin", "editor", "staff", "lanhdao"]);
-const VIEWER_ROLE_KEYS = new Set(["viewer", "user", "nguoidung", "khach"]);
+type AuthProfile = {
+  userId?: number;
+  fullName?: string;
+  role?: string;
+};
+
+const ADMIN_ROLE_KEYS = new Set(["admin"]);
+const EDITOR_ROLE_KEYS = new Set(["editor"]);
+const VIEWER_ROLE_KEYS = new Set(["viewer"]);
+const DASHBOARD_ROLE_KEYS = new Set([
+  ...ADMIN_ROLE_KEYS,
+  ...EDITOR_ROLE_KEYS,
+  ...VIEWER_ROLE_KEYS,
+]);
 
 function toRoleKey(role: string): string {
   return normalizeRole(role).replace(/\s+/g, "");
@@ -76,7 +88,21 @@ export function hasDashboardAccess(role: string): boolean {
 }
 
 export function getRedirectPathByRole(role: string): string {
-  return hasDashboardAccess(role) ? "/dashboard" : "/";
+  const roleKey = toRoleKey(role);
+
+  if (ADMIN_ROLE_KEYS.has(roleKey)) {
+    return "/dashboard/admin";
+  }
+
+  if (EDITOR_ROLE_KEYS.has(roleKey)) {
+    return "/dashboard/editor";
+  }
+
+  if (VIEWER_ROLE_KEYS.has(roleKey)) {
+    return "/";
+  }
+
+  return "/";
 }
 
 export function setAuthSession(input: AuthSessionInput): void {
@@ -123,6 +149,64 @@ export function getAuthSnapshot(): AuthSnapshot {
     token: storageToken,
     role: storageRole,
   };
+}
+
+function parseJwtPayload(token: string): Record<string, unknown> | null {
+  const parts = token.split(".");
+  if (parts.length < 2) {
+    return null;
+  }
+
+  try {
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+    const decoded = atob(padded);
+    return JSON.parse(decoded) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+export function getAuthProfile(): AuthProfile | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const rawProfile = localStorage.getItem(PROFILE_KEY);
+  if (!rawProfile) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(rawProfile) as AuthProfile;
+  } catch {
+    return null;
+  }
+}
+
+export function getCurrentUserId(): number | null {
+  const profileUserId = getAuthProfile()?.userId;
+  if (typeof profileUserId === "number" && Number.isFinite(profileUserId) && profileUserId > 0) {
+    return profileUserId;
+  }
+
+  const { token } = getAuthSnapshot();
+  if (!token) {
+    return null;
+  }
+
+  const claims = parseJwtPayload(token);
+  const claimUserId =
+    claims?.nameid ??
+    claims?.sub ??
+    claims?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
+
+  const parsedUserId = Number(claimUserId);
+  if (Number.isFinite(parsedUserId) && parsedUserId > 0) {
+    return parsedUserId;
+  }
+
+  return null;
 }
 
 export function hydrateAuthCookiesFromStorage(): void {

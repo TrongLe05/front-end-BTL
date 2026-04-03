@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { SidebarArticle } from "@/components/admin/article/sidebar-article";
-import { SiteHeaderArticle } from "@/components/admin/article/site-header-article";
+import { SidebarArticle } from "@/components/dashboard/editor/sidebar-article";
+import { SiteHeaderArticle } from "@/components/dashboard/editor/site-header-article";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { ArticleForm } from "@/components/admin/article/article-form";
+import { ArticleForm } from "@/components/dashboard/editor/article-form";
 // import { CategoryTable } from "@/components/admin/article/category-table";
-import { ArticleTable } from "@/components/admin/article/article-table";
+import { ArticleTable } from "@/components/dashboard/editor/article-table";
 import { getCategories, getArticles } from "@/lib/api/article";
 import { Sidebar } from "lucide-react";
 

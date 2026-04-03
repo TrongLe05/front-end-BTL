@@ -28,10 +28,13 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   clearAuthSession,
+  getRedirectPathByRole,
   getAuthSnapshot,
   hasDashboardAccess,
   hydrateAuthCookiesFromStorage,
+  isViewerRole,
 } from "@/lib/auth";
+import { getActiveServices, type Service } from "@/lib/api/service";
 
 const components: {
   id: number;
@@ -71,14 +74,6 @@ const components: {
   },
 ];
 
-type Service = {
-  serviceId: number;
-  name: string;
-  description: string;
-  procedureDetails?: string;
-  isActive: boolean;
-};
-
 export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [services, setServices] = useState<Service[]>([]);
@@ -88,7 +83,11 @@ export function Navbar() {
   const pathname = usePathname();
 
   const isAuthenticated = authRole !== null;
-  const canAccessAdmin = isAuthenticated && hasDashboardAccess(authRole ?? "");
+  const canAccessAdmin =
+    isAuthenticated &&
+    hasDashboardAccess(authRole ?? "") &&
+    !isViewerRole(authRole ?? "");
+  const dashboardHref = getRedirectPathByRole(authRole ?? "");
 
   const isRouteActive = (href: string) => {
     if (href === "/") {
@@ -97,9 +96,6 @@ export function Navbar() {
 
     return pathname === href || pathname.startsWith(`${href}/`);
   };
-
-  const apiBaseUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5265";
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
@@ -165,17 +161,7 @@ export function Navbar() {
       const timeoutId = setTimeout(() => controller.abort(), 4000);
 
       try {
-        const response = await fetch(`${apiBaseUrl}/api/Service`, {
-          headers: { Accept: "application/json" },
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to load services: ${response.status}`);
-        }
-
-        const data: Service[] = await response.json();
-        const activeServices = data.filter((service) => service.isActive);
+        const activeServices = await getActiveServices(controller.signal);
 
         if (isMounted) {
           setServices(activeServices);
@@ -204,7 +190,7 @@ export function Navbar() {
     return () => {
       isMounted = false;
     };
-  }, [apiBaseUrl]);
+  }, []);
 
   return (
     <div className="relative">
@@ -273,7 +259,7 @@ export function Navbar() {
 
         <div className="hidden items-center gap-2 md:flex">
           {canAccessAdmin ? (
-            <Link href="/dashboard">
+            <Link href={dashboardHref}>
               <Button size="lg" className="text-lg" variant="secondary">
                 Quản trị
               </Button>
@@ -357,7 +343,7 @@ export function Navbar() {
 
             {canAccessAdmin ? (
               <Link
-                href="/dashboard"
+                href={dashboardHref}
                 onClick={closeMobileMenu}
                 className="mt-3"
               >
