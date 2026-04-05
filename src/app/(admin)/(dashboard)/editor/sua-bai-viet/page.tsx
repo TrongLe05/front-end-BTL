@@ -5,14 +5,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getCategories, getArticles } from "@/lib/api/article";
 import { ArticleEditFormPage } from "@/components/dashboard/editor/article-edit-page";
 
-async function ArticlePageContent({
-  searchParams,
-}: {
-  searchParams: Promise<{ id?: string }>;
-}) {
-  const params = await searchParams;
-  const initialArticleId = params?.id ? parseInt(params.id, 10) : null;
-
+async function ArticlePageContent() {
   const [categories, articles] = await Promise.all([
     getCategories(),
     getArticles(),
@@ -25,11 +18,7 @@ async function ArticlePageContent({
           <h1 className="text-3xl font-bold mb-6">Sửa bài viết</h1>
 
           {/* Form sửa bài viết */}
-          <ArticleEditFormPage
-            articles={articles}
-            categories={categories}
-            initialArticleId={initialArticleId}
-          />
+          <ArticleEditFormPage articles={articles} categories={categories} />
         </div>
       </div>
     </div>

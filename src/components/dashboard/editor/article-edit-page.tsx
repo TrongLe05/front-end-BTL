@@ -16,16 +16,14 @@ import { Label } from "@/components/ui/label";
 interface ArticleEditFormPageProps {
   articles: Article[];
   categories: Category[];
-  initialArticleId?: number | null;
 }
 
 export function ArticleEditFormPage({
   articles,
   categories,
-  initialArticleId,
 }: ArticleEditFormPageProps) {
   const [selectedArticleId, setSelectedArticleId] = useState<number | null>(
-    initialArticleId || null,
+    null,
   );
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [isLoadingArticle, setIsLoadingArticle] = useState(false);
@@ -81,10 +79,6 @@ export function ArticleEditFormPage({
       mounted = false;
     };
   }, [selectedArticleId]);
-
-  useEffect(() => {
-    setSelectedArticleId(initialArticleId || null);
-  }, [initialArticleId]);
 
   return (
     <div className="space-y-6">

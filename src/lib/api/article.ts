@@ -66,6 +66,28 @@ export async function getArticles() {
   }
 }
 
+export async function getLatestArticles() {
+  try {
+    const response = await fetch(`${API_PREFIX}/Article/latest`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch latest articles: ${response.statusText}`,
+      );
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching latest articles:", error);
+    return [];
+  }
+}
+
 export async function getArticleById(id: number) {
   try {
     const response = await fetch(`${API_PREFIX}/Article/${id}`, {
@@ -172,7 +194,7 @@ export async function uploadArticleThumbnail(
     formData.append("title", title.trim());
   }
 
-  const response = await fetch(`${API_PREFIX}/Gallery/upload`, {
+  const response = await fetch(`${API_PREFIX}/admin/Gallery/upload`, {
     method: "POST",
     body: formData,
   });

@@ -173,7 +173,7 @@ export function ArticleEditForm({
         setSuccess(true);
         setTimeout(() => {
           onSuccess?.();
-          router.push("/dashboard/editor");
+          router.push("/editor");
         }, 1500);
       }
     } catch (err) {
