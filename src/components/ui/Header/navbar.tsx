@@ -194,7 +194,7 @@ export function Navbar() {
 
   return (
     <div className="relative">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-2 sm:px-4">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-2 sm:px-4">
         <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Image
             src="/Logo_TPCaoLanh.svg"
@@ -203,7 +203,7 @@ export function Navbar() {
             height={45}
             className="h-9 w-9 rounded-full object-cover sm:h-11 sm:w-11"
           />
-          <span className="truncate text-base font-bold sm:text-xl">
+          <span className="truncate text-base font-bold sm:text-xl ">
             Phường Cao Lãnh
           </span>
         </Link>

@@ -1,6 +1,11 @@
 import { getArticleById } from "@/lib/api/article";
+import { getCommentsByArticle } from "@/lib/api/comment";
 import { Article } from "@/types";
-import Image from "next/image";
+import { Separator } from "@/components/ui/separator";
+import { ArticleComments } from "@/components/article-comments";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type DetailPageProps = {
   params: Promise<{
@@ -21,6 +26,7 @@ export default async function TinTucDetailPage({ params }: DetailPageProps) {
   }
 
   const article = (await getArticleById(articleId)) as Article | null;
+  const comments = await getCommentsByArticle(articleId).catch(() => []);
 
   if (!article) {
     return (
@@ -31,16 +37,30 @@ export default async function TinTucDetailPage({ params }: DetailPageProps) {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-6">
-      <h1 className="text-3xl font-bold">{article.title}</h1>
-      {/* <Image src={article.thumbnailUrl} alt={article.title} width={800} height={450} /> */}
-      {article.summary ? (
-        <p className="mt-3 text-muted-foreground">{article.summary}</p>
-      ) : null}
+    <main>
+      <section>
+        <div id="content" className="mx-auto max-w-3xl px-4 py-6">
+          <h1 className="text-3xl font-bold">{article.title}</h1>
+          {article.summary ? (
+            <p className="mt-3 text-muted-foreground">{article.summary}</p>
+          ) : null}
 
-      <div className="mt-6 prose max-w-none">
-        <div dangerouslySetInnerHTML={{ __html: article.content || "" }} />
-      </div>
+          <div className="mt-6 prose max-w-none">
+            <div dangerouslySetInnerHTML={{ __html: article.content || "" }} />
+          </div>
+        </div>
+      </section>
+
+      <Separator />
+      <section>
+        <div id="comments" className=" px-4 py-6  ">
+          <ArticleComments
+            key={articleId}
+            articleId={articleId}
+            initialComments={comments}
+          />
+        </div>
+      </section>
     </main>
   );
 }

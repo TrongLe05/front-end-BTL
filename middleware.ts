@@ -1,63 +1,64 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import {
+  ADMIN_DASHBOARD_PATH,
+  EDITOR_DASHBOARD_PATH,
+  HOME_PATH,
+  LOGIN_PATH,
+  getRedirectPathByRole,
+  hasDashboardAccess,
+  isViewerRole,
+  normalizeRole,
+} from "@/lib/auth";
+
 const TOKEN_COOKIE = "px_token";
 const ROLE_COOKIE = "px_role";
-
-const ADMIN_ROLE_KEYS = new Set(["admin"]);
-const EDITOR_ROLE_KEYS = new Set(["editor"]);
-const VIEWER_ROLE_KEYS = new Set(["viewer"]);
-const DASHBOARD_ROLE_KEYS = new Set([
-  ...ADMIN_ROLE_KEYS,
-  ...EDITOR_ROLE_KEYS,
-  ...VIEWER_ROLE_KEYS,
-]);
-
-function normalizeRole(role: string): string {
-  return role
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-}
 
 function toRoleKey(role: string): string {
   return normalizeRole(role).replace(/\s+/g, "");
 }
 
-function hasDashboardAccess(role: string): boolean {
-  return DASHBOARD_ROLE_KEYS.has(toRoleKey(role));
-}
+const LEGACY_DASHBOARD_ROOT_PATH = "/dashboard";
+const LEGACY_ADMIN_DASHBOARD_PATH = "/dashboard/admin";
+const LEGACY_EDITOR_DASHBOARD_PATH = "/dashboard/editor";
 
 function isAdminRole(role: string): boolean {
-  return ADMIN_ROLE_KEYS.has(toRoleKey(role));
+  return toRoleKey(role) === "admin";
 }
 
 function isEditorRole(role: string): boolean {
-  return EDITOR_ROLE_KEYS.has(toRoleKey(role));
+  return toRoleKey(role) === "editor";
 }
 
-function isViewerRole(role: string): boolean {
-  return VIEWER_ROLE_KEYS.has(toRoleKey(role));
+function getCanonicalDashboardPath(pathname: string): string | null {
+  if (pathname === LEGACY_ADMIN_DASHBOARD_PATH) {
+    return ADMIN_DASHBOARD_PATH;
+  }
+
+  if (pathname.startsWith(`${LEGACY_ADMIN_DASHBOARD_PATH}/`)) {
+    return pathname.replace(LEGACY_ADMIN_DASHBOARD_PATH, ADMIN_DASHBOARD_PATH);
+  }
+
+  if (pathname === LEGACY_EDITOR_DASHBOARD_PATH) {
+    return EDITOR_DASHBOARD_PATH;
+  }
+
+  if (pathname.startsWith(`${LEGACY_EDITOR_DASHBOARD_PATH}/`)) {
+    return pathname.replace(LEGACY_EDITOR_DASHBOARD_PATH, EDITOR_DASHBOARD_PATH);
+  }
+
+  return null;
 }
 
-function getDashboardPathByRole(role: string): string {
-  if (isAdminRole(role)) {
-    return "/dashboard/admin";
-  }
-
-  if (isEditorRole(role)) {
-    return "/dashboard/editor";
-  }
-
-  if (isViewerRole(role)) {
-    return "/";
-  }
-
-  return "/";
-}
-
-function getRedirectByRole(role: string): string {
-  return hasDashboardAccess(role) ? getDashboardPathByRole(role) : "/";
+function isProtectedRoute(pathname: string): boolean {
+  return (
+    pathname === ADMIN_DASHBOARD_PATH ||
+    pathname.startsWith(`${ADMIN_DASHBOARD_PATH}/`) ||
+    pathname === EDITOR_DASHBOARD_PATH ||
+    pathname.startsWith(`${EDITOR_DASHBOARD_PATH}/`) ||
+    pathname === LEGACY_DASHBOARD_ROOT_PATH ||
+    pathname.startsWith(`${LEGACY_DASHBOARD_ROOT_PATH}/`)
+  );
 }
 
 export function middleware(request: NextRequest) {
@@ -66,77 +67,79 @@ export function middleware(request: NextRequest) {
   const rawRole = request.cookies.get(ROLE_COOKIE)?.value ?? "";
   const role = decodeURIComponent(rawRole);
 
-  if (pathname === "/dang-nhap" && token) {
+  const canonicalPath = getCanonicalDashboardPath(pathname);
+  if (canonicalPath) {
     const url = request.nextUrl.clone();
-    url.pathname = getRedirectByRole(role);
+    url.pathname = canonicalPath;
+    url.search = search;
+    return NextResponse.redirect(url);
+  }
+
+  if (pathname === LOGIN_PATH && token) {
+    const url = request.nextUrl.clone();
+    url.pathname = getRedirectPathByRole(role);
     url.search = "";
     return NextResponse.redirect(url);
   }
 
-  const isDashboardPath =
-    pathname === "/dashboard" || pathname.startsWith("/dashboard/");
-
-  const isAdminPath =
-    pathname === "/dashboard/admin" || pathname.startsWith("/dashboard/admin/");
-
-  const isEditorPath =
-    pathname === "/dashboard/editor" ||
-    pathname.startsWith("/dashboard/editor/");
-
-  const isViewerPath =
-    pathname === "/dashboard/viewer" ||
-    pathname.startsWith("/dashboard/viewer/");
-
-  if (isDashboardPath) {
+  if (pathname === LEGACY_DASHBOARD_ROOT_PATH) {
     if (!token) {
       const url = request.nextUrl.clone();
-      url.pathname = "/dang-nhap";
+      url.pathname = LOGIN_PATH;
+      url.search = `?callbackUrl=${encodeURIComponent(pathname + search)}`;
+      return NextResponse.redirect(url);
+    }
+
+    const url = request.nextUrl.clone();
+    url.pathname = getRedirectPathByRole(role);
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
+  if (isProtectedRoute(pathname)) {
+    if (!token) {
+      const url = request.nextUrl.clone();
+      url.pathname = LOGIN_PATH;
       url.search = `?callbackUrl=${encodeURIComponent(pathname + search)}`;
       return NextResponse.redirect(url);
     }
 
     if (!hasDashboardAccess(role)) {
       const url = request.nextUrl.clone();
-      url.pathname = "/";
+      url.pathname = HOME_PATH;
       url.search = "";
       return NextResponse.redirect(url);
     }
 
-    if (pathname === "/dashboard") {
-      const targetPath = getDashboardPathByRole(role);
+    const canAccessEditor = isEditorRole(role);
+    const canAccessAdmin = isAdminRole(role);
+    const canAccessViewer = isViewerRole(role);
 
-      if (targetPath !== pathname) {
+    if (pathname.startsWith(`${ADMIN_DASHBOARD_PATH}/`) || pathname === ADMIN_DASHBOARD_PATH) {
+      if (!canAccessAdmin) {
         const url = request.nextUrl.clone();
-        url.pathname = targetPath;
+        url.pathname = getRedirectPathByRole(role);
         url.search = "";
         return NextResponse.redirect(url);
       }
     }
 
-    if (isAdminPath && !isAdminRole(role)) {
-      const url = request.nextUrl.clone();
-      url.pathname = getDashboardPathByRole(role);
-      url.search = "";
-      return NextResponse.redirect(url);
+    if (pathname.startsWith(`${EDITOR_DASHBOARD_PATH}/`) || pathname === EDITOR_DASHBOARD_PATH) {
+      if (!canAccessEditor && !canAccessAdmin) {
+        const url = request.nextUrl.clone();
+        url.pathname = getRedirectPathByRole(role);
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
     }
 
-    if (isEditorPath && !isEditorRole(role) && !isAdminRole(role)) {
-      const url = request.nextUrl.clone();
-      url.pathname = getDashboardPathByRole(role);
-      url.search = "";
-      return NextResponse.redirect(url);
-    }
-
-    if (
-      isViewerPath &&
-      !isViewerRole(role) &&
-      !isEditorRole(role) &&
-      !isAdminRole(role)
-    ) {
-      const url = request.nextUrl.clone();
-      url.pathname = getDashboardPathByRole(role);
-      url.search = "";
-      return NextResponse.redirect(url);
+    if (pathname.startsWith(`${LEGACY_DASHBOARD_ROOT_PATH}/`)) {
+      if (!canAccessViewer && !canAccessEditor && !canAccessAdmin) {
+        const url = request.nextUrl.clone();
+        url.pathname = getRedirectPathByRole(role);
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
     }
   }
 
@@ -144,5 +147,13 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dang-nhap", "/dashboard", "/dashboard/:path*"],
+  matcher: [
+    "/dang-nhap",
+    "/dashboard",
+    "/dashboard/:path*",
+    "/admin",
+    "/admin/:path*",
+    "/editor",
+    "/editor/:path*",
+  ],
 };

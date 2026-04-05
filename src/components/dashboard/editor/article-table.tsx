@@ -1,6 +1,9 @@
 "use client";
 
 import { Article } from "@/types";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Edit2Icon, Trash2Icon } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -53,11 +56,8 @@ export function ArticleTable({ articles }: ArticleTableProps) {
 
   return (
     <div className="rounded-lg border bg-white">
-      <div className="border-b px-6 py-4">
-        <h3 className="text-lg font-semibold">Danh sách bài viết</h3>
-      </div>
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-muted">
           <TableRow>
             <TableHead>ID</TableHead>
             <TableHead>Tiêu đề</TableHead>
@@ -71,7 +71,7 @@ export function ArticleTable({ articles }: ArticleTableProps) {
         <TableBody>
           {articles.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-gray-500 py-4">
+              <TableCell colSpan={8} className="text-center text-gray-500 py-4">
                 Không có bài viết nào
               </TableCell>
             </TableRow>

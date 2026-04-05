@@ -20,6 +20,10 @@ import {
   Settings2Icon,
   CircleHelpIcon,
   SearchIcon,
+  CirclePlusIcon,
+  FilePen,
+  Trash2Icon,
+  ImagePlus,
 } from "lucide-react";
 
 const data = {
@@ -30,9 +34,29 @@ const data = {
   },
   navMain: [
     {
-      title: "Quản lý bài viết",
-      url: "#",
+      title: "Dashboard",
+      url: "",
       icon: <LayoutDashboardIcon />,
+    },
+    {
+      title: "Tạo bài viết",
+      url: "/tao-bai-viet",
+      icon: <CirclePlusIcon />,
+    },
+    {
+      title: "Sửa bài viết",
+      url: "/sua-bai-viet",
+      icon: <FilePen />,
+    },
+    {
+      title: "Xoá bài viết",
+      url: "/xoa-bai-viet",
+      icon: <Trash2Icon />,
+    },
+    {
+      title: "Up ảnh thư viện",
+      url: "/up-anh-thu-vien",
+      icon: <ImagePlus />,
     },
   ],
   navSecondary: [

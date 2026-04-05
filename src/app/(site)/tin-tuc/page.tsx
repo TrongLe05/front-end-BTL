@@ -3,6 +3,24 @@ import { getArticles } from "@/lib/api/article";
 import { Article } from "@/types";
 import Image from "next/image";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+function resolveThumbnailUrl(thumbnailUrl?: string): string {
+  if (!thumbnailUrl) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(thumbnailUrl)) {
+    return thumbnailUrl;
+  }
+
+  const normalizedPath = thumbnailUrl.startsWith("/")
+    ? thumbnailUrl
+    : `/${thumbnailUrl}`;
+
+  return `${API_BASE_URL}${normalizedPath}`;
+}
+
 export default async function TinTuc() {
   const articles = (await getArticles()) as Article[];
 
@@ -21,13 +39,14 @@ export default async function TinTuc() {
           {articles.map((article) => (
             <article key={article.articleId} className="rounded-lg border p-4">
               <h2 className="text-xl font-semibold">{article.title}</h2>
-              {article.thumbnailUrl ? (
+              {resolveThumbnailUrl(article.thumbnailUrl) ? (
                 <Image
-                  src={`/${article.thumbnailUrl}`}
+                  src={resolveThumbnailUrl(article.thumbnailUrl)}
                   alt={article.title}
                   width={800}
                   height={450}
-                  className="w-full "
+                  className="w-100 h-auto mt-2 rounded"
+                  unoptimized
                 />
               ) : null}
               {article.summary ? (
@@ -39,6 +58,7 @@ export default async function TinTuc() {
               <div className="mt-3">
                 <Link
                   href={`/tin-tuc/${article.articleId}`}
+                  prefetch={false}
                   className="text-sm font-medium text-blue-600 hover:underline"
                 >
                   Xem chi tiết

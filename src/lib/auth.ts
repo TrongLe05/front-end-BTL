@@ -5,6 +5,11 @@ type AuthSessionInput = {
   fullName?: string;
 };
 
+export const HOME_PATH = "/";
+export const LOGIN_PATH = "/dang-nhap";
+export const ADMIN_DASHBOARD_PATH = "/admin";
+export const EDITOR_DASHBOARD_PATH = "/editor";
+
 const TOKEN_KEY = "auth_token";
 const ROLE_KEY = "auth_role";
 const PROFILE_KEY = "auth_profile";
@@ -91,18 +96,18 @@ export function getRedirectPathByRole(role: string): string {
   const roleKey = toRoleKey(role);
 
   if (ADMIN_ROLE_KEYS.has(roleKey)) {
-    return "/dashboard/admin";
+    return ADMIN_DASHBOARD_PATH;
   }
 
   if (EDITOR_ROLE_KEYS.has(roleKey)) {
-    return "/dashboard/editor";
+    return EDITOR_DASHBOARD_PATH;
   }
 
   if (VIEWER_ROLE_KEYS.has(roleKey)) {
-    return "/";
+    return HOME_PATH;
   }
 
-  return "/";
+  return HOME_PATH;
 }
 
 export function setAuthSession(input: AuthSessionInput): void {
@@ -159,7 +164,10 @@ function parseJwtPayload(token: string): Record<string, unknown> | null {
 
   try {
     const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+    const padded = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      "=",
+    );
     const decoded = atob(padded);
     return JSON.parse(decoded) as Record<string, unknown>;
   } catch {
@@ -186,7 +194,11 @@ export function getAuthProfile(): AuthProfile | null {
 
 export function getCurrentUserId(): number | null {
   const profileUserId = getAuthProfile()?.userId;
-  if (typeof profileUserId === "number" && Number.isFinite(profileUserId) && profileUserId > 0) {
+  if (
+    typeof profileUserId === "number" &&
+    Number.isFinite(profileUserId) &&
+    profileUserId > 0
+  ) {
     return profileUserId;
   }
 
@@ -199,7 +211,9 @@ export function getCurrentUserId(): number | null {
   const claimUserId =
     claims?.nameid ??
     claims?.sub ??
-    claims?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
+    claims?.[
+      "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+    ];
 
   const parsedUserId = Number(claimUserId);
   if (Number.isFinite(parsedUserId) && parsedUserId > 0) {

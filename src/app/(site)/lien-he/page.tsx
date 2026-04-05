@@ -33,7 +33,7 @@ export default function LienHe() {
                   Số điện thoại:{" "}
                   <a
                     href="tel:02773851601"
-                    className="text-blue-600 hover:underline"
+                    className="text-pink-600 hover:underline"
                   >
                     02773851601
                   </a>
@@ -43,7 +43,7 @@ export default function LienHe() {
                   Email:{" "}
                   <a
                     href="mailto:ubndpcaolanh@gmail.com"
-                    className="text-blue-600 hover:underline"
+                    className="text-pink-600 hover:underline"
                   >
                     ubndpcaolanh@gmail.com
                   </a>
@@ -55,7 +55,7 @@ export default function LienHe() {
                     href="https://caolanh.dongthap.gov.vn"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
+                    className="text-pink-600 hover:underline"
                   >
                     caolanh.dongthap.gov.vn
                   </a>
@@ -83,7 +83,7 @@ export default function LienHe() {
                       id="hoTen"
                       type="text"
                       placeholder="Nguyễn Văn A"
-                      className="py-5"
+                      className="py-5 outline-pink-100 focus-visible:ring-pink-200 focus-visible:ring-3"
                     />
                   </div>
                   <div className="grid ">
@@ -94,7 +94,7 @@ export default function LienHe() {
                       id="email"
                       type="email"
                       placeholder="mail@example.com"
-                      className="py-5"
+                      className="py-5 outline-pink-100 focus-visible:ring-pink-200 focus-visible:ring-3"
                     />
                   </div>
                   <div className="grid">
@@ -107,7 +107,7 @@ export default function LienHe() {
                       id="numberPhone"
                       type="tel"
                       placeholder="Nhập số điện thoại"
-                      className="py-5"
+                      className="py-5 outline-pink-100 focus-visible:ring-pink-200 focus-visible:ring-3"
                     />
                   </div>
                   <div className="grid ">
@@ -117,7 +117,7 @@ export default function LienHe() {
                     <Textarea
                       id="message"
                       placeholder="Nhập nội dung phản ánh/kiến nghị"
-                      className="h-40"
+                      className="h-40 outline-pink-100 focus-visible:ring-pink-200 focus-visible:ring-3"
                     />
                   </div>
                 </div>
@@ -125,7 +125,10 @@ export default function LienHe() {
             </CardContent>
 
             <CardFooter>
-              <Button size="lg" className="w-full text-base ">
+              <Button
+                size="lg"
+                className="w-full text-base font-semibold bg-pink-600"
+              >
                 GỬI
               </Button>
             </CardFooter>

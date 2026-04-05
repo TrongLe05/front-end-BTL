@@ -26,11 +26,14 @@ const introSections = [
 
 export default function GioiThieuPage() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-10">
-      <div className="rounded-2xl border bg-linear-to-r from-sky-50 via-white to-cyan-50 p-6 md:p-8">
-        <h1 className="text-3xl font-bold text-slate-900 md:text-4xl">
+    <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-8 md:py-10">
+      <div className="relative h-[360px] rounded-2xl border-2 border-pink-200 shadow-sm overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/khu-di-tich-nguyen-sinh-sac-cover.png')] bg-cover bg-center"></div>
+        <div className="absolute inset-0 bg-black/10"></div>
+
+        {/* <h1 className="absolute top-40 left-5 text-2xl font-bold text-pink-100 md:text-4xl">
           Giới thiệu Phường Cao Lãnh
-        </h1>
+        </h1> */}
       </div>
       <section className="mt-8">
         <div className="mt-4 grid gap-4 lg:grid-cols-3 md:grid-cols-2">
@@ -47,7 +50,7 @@ export default function GioiThieuPage() {
               </p>
               <Link
                 href={section.href}
-                className="mt-4 inline-flex items-center rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700"
+                className="w-full mt-4 flex justify-center items-center rounded-md bg-pink-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-pink-700"
               >
                 {section.action}
               </Link>

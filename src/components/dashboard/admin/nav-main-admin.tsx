@@ -34,7 +34,7 @@ export function NavMainAdmin({
               <SidebarMenuButton tooltip={item.title} className="text-base">
                 {item.icon}
                 <span>
-                  <Link href={`/dashboard/admin${item.url}`}>{item.title}</Link>
+                  <Link href={`/admin${item.url}`}>{item.title}</Link>
                 </span>
               </SidebarMenuButton>
             </SidebarMenuItem>

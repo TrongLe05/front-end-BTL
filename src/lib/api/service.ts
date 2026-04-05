@@ -6,21 +6,36 @@ export type Service = {
   isActive: boolean;
 };
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5265";
+const RAW_API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5265";
+
+const API_BASE_URL = RAW_API_BASE_URL.replace(/\/$/, "");
+const API_PREFIX = API_BASE_URL.endsWith("/api")
+  ? API_BASE_URL
+  : `${API_BASE_URL}/api`;
 
 export async function getActiveServices(
   signal?: AbortSignal,
 ): Promise<Service[]> {
-  const response = await fetch(`${API_BASE_URL}/api/Service`, {
-    headers: { Accept: "application/json" },
-    signal,
-  });
+  const endpoints = [`${API_PREFIX}/Services`, `${API_PREFIX}/Service`];
 
-  if (!response.ok) {
-    throw new Error(`Failed to load services: ${response.status}`);
+  for (const endpoint of endpoints) {
+    const response = await fetch(endpoint, {
+      headers: { Accept: "application/json" },
+      signal,
+    });
+
+    if (response.ok) {
+      const data: Service[] = await response.json();
+      return data.filter((service) => service.isActive);
+    }
+
+    if (response.status !== 404) {
+      throw new Error(`Failed to load services: ${response.status}`);
+    }
   }
 
-  const data: Service[] = await response.json();
-  return data.filter((service) => service.isActive);
+  return [];
 }

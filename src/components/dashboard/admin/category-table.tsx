@@ -38,7 +38,13 @@ import {
 
 import { toast } from "sonner";
 import { z } from "zod";
-import { getCategories, hideCategory, showCategory } from "@/lib/api/category";
+import {
+  createCategory,
+  getCategories,
+  hideCategory,
+  showCategory,
+  type ApiCategory,
+} from "@/lib/api/category";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -88,6 +94,7 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  CirclePlus,
 } from "lucide-react";
 
 type CategoryTableMeta = {
@@ -105,6 +112,53 @@ export const schema = z.object({
   status: z.string(),
   isActive: z.boolean().optional(),
 });
+
+type CategoryRow = z.infer<typeof schema>;
+
+function mapApiCategoryToRow(category: ApiCategory): CategoryRow {
+  const categoryId = Number(category.categoryId);
+
+  if (!Number.isFinite(categoryId)) {
+    throw new Error("Invalid category id from API response.");
+  }
+
+  const isActive = category.status === 1;
+
+  return {
+    id: categoryId,
+    name: category.name,
+    slug: category.slug,
+    parentId: category.parentId,
+    parentName: category.parentName || undefined,
+    status: isActive ? "Hiển thị" : "Ẩn",
+    isActive,
+  };
+}
+
+function getCategoryTreeIds(
+  rootId: number,
+  categories: CategoryRow[],
+): Set<number> {
+  const ids = new Set<number>();
+  const queue: number[] = [rootId];
+
+  while (queue.length > 0) {
+    const currentId = queue.shift();
+    if (typeof currentId !== "number" || ids.has(currentId)) {
+      continue;
+    }
+
+    ids.add(currentId);
+
+    categories.forEach((category) => {
+      if (category.parentId === currentId && !ids.has(category.id)) {
+        queue.push(category.id);
+      }
+    });
+  }
+
+  return ids;
+}
 
 function DragHandle({ id }: { id: number }) {
   const { attributes, listeners } = useSortable({
@@ -296,6 +350,12 @@ export function CategoryTable({
   data: z.infer<typeof schema>[];
 }) {
   const [data, setData] = React.useState(() => initialData);
+  const [isCreateOpen, setIsCreateOpen] = React.useState(false);
+  const [newCategoryName, setNewCategoryName] = React.useState("");
+  const [newCategoryParentId, setNewCategoryParentId] = React.useState<
+    number | null
+  >(null);
+  const [isCreating, setIsCreating] = React.useState(false);
   const [statusFilter, setStatusFilter] = React.useState<
     "all" | "active" | "hidden"
   >("all");
@@ -331,7 +391,13 @@ export function CategoryTable({
         return;
       }
 
-      setPendingStatusIds((prev) => new Set(prev).add(item.id));
+      const affectedIds = getCategoryTreeIds(item.id, data);
+
+      setPendingStatusIds((prev) => {
+        const next = new Set(prev);
+        affectedIds.forEach((id) => next.add(id));
+        return next;
+      });
 
       try {
         const isVisible = item.status === "Hiển thị";
@@ -344,7 +410,7 @@ export function CategoryTable({
 
         setData((prev) =>
           prev.map((row) =>
-            row.id === item.id
+            affectedIds.has(row.id)
               ? {
                   ...row,
                   status: isVisible ? "Ẩn" : "Hiển thị",
@@ -364,18 +430,53 @@ export function CategoryTable({
       } finally {
         setPendingStatusIds((prev) => {
           const next = new Set(prev);
-          next.delete(item.id);
+          affectedIds.forEach((id) => next.delete(id));
           return next;
         });
       }
     },
-    [pendingStatusIds],
+    [data, pendingStatusIds],
   );
 
   const openEditForm = React.useCallback((item: z.infer<typeof schema>) => {
     setEditingCategory(item);
     setIsEditOpen(true);
   }, []);
+
+  const resetCreateForm = React.useCallback(() => {
+    setNewCategoryName("");
+    setNewCategoryParentId(null);
+  }, []);
+
+  const handleCreateCategory = React.useCallback(async () => {
+    const normalizedName = newCategoryName.trim();
+
+    if (!normalizedName) {
+      toast.error("Vui lòng nhập tên danh mục.");
+      return;
+    }
+
+    setIsCreating(true);
+
+    try {
+      const created = await createCategory({
+        name: normalizedName,
+        parentId: newCategoryParentId,
+      });
+
+      const newRow = mapApiCategoryToRow(created);
+
+      setData((prev) => [newRow, ...prev]);
+      resetCreateForm();
+      setIsCreateOpen(false);
+      toast.success("Thêm danh mục thành công.");
+    } catch (error) {
+      console.error("Cannot create category", error);
+      toast.error("Không thể thêm danh mục.");
+    } finally {
+      setIsCreating(false);
+    }
+  }, [newCategoryName, newCategoryParentId, resetCreateForm]);
 
   React.useEffect(() => {
     const controller = new AbortController();
@@ -384,21 +485,8 @@ export function CategoryTable({
       try {
         const categories = await getCategories(controller.signal);
 
-        const mappedCategories: z.infer<typeof schema>[] = categories.map(
-          (category) => {
-            const isActive = category.status === 1;
-
-            return {
-              id: category.categoryId,
-              name: category.name,
-              slug: category.slug,
-              parentId: category.parentId,
-              parentName: category.parentName || undefined,
-              status: isActive ? "Hiển thị" : "Ẩn",
-              isActive: isActive,
-            };
-          },
-        );
+        const mappedCategories: z.infer<typeof schema>[] =
+          categories.map(mapApiCategoryToRow);
 
         setData(mappedCategories);
       } catch (error) {
@@ -437,6 +525,11 @@ export function CategoryTable({
       return matchesStatus && matchesSearch;
     });
   }, [data, searchTerm, statusFilter]);
+
+  const parentCategoryOptions = React.useMemo(
+    () => data.filter((category) => category.status === "Hiển thị"),
+    [data],
+  );
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data?.map(({ id }) => id) || [],
@@ -649,7 +742,12 @@ export function CategoryTable({
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-150"
           />
+          <Button variant="outline" onClick={() => setIsCreateOpen(true)}>
+            <CirclePlus />
+            Thêm danh mục
+          </Button>
         </div>
+        <div className="flex items-center gap-2 px-4 lg:px-6"></div>
         <TabsContent value="all">{renderTable()}</TabsContent>
         <TabsContent value="active">{renderTable()}</TabsContent>
         <TabsContent value="hidden">{renderTable()}</TabsContent>
@@ -705,6 +803,87 @@ export function CategoryTable({
           <SheetFooter>
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>
               Đóng
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet
+        open={isCreateOpen}
+        onOpenChange={(open) => {
+          setIsCreateOpen(open);
+          if (!open) {
+            resetCreateForm();
+          }
+        }}
+      >
+        <SheetContent side="right" className="w-full sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Thêm danh mục mới</SheetTitle>
+            <SheetDescription>
+              Tạo danh mục mới theo API quản trị danh mục hiện có.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="space-y-4 px-4">
+            <div className="space-y-2">
+              <Label htmlFor="create-category-name">Tên danh mục</Label>
+              <Input
+                id="create-category-name"
+                value={newCategoryName}
+                onChange={(event) => setNewCategoryName(event.target.value)}
+                placeholder="Nhập tên danh mục"
+                disabled={isCreating}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="create-category-parent">Danh mục cha</Label>
+              <Select
+                value={
+                  newCategoryParentId === null
+                    ? "none"
+                    : newCategoryParentId.toString()
+                }
+                onValueChange={(value) => {
+                  setNewCategoryParentId(
+                    value === "none" ? null : Number(value),
+                  );
+                }}
+                disabled={isCreating}
+              >
+                <SelectTrigger id="create-category-parent" className="w-full">
+                  <SelectValue placeholder="Chọn danh mục cha (không bắt buộc)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Không có danh mục cha</SelectItem>
+                  {parentCategoryOptions.map((category) => (
+                    <SelectItem
+                      key={category.id}
+                      value={category.id.toString()}
+                    >
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <SheetFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateOpen(false)}
+              disabled={isCreating}
+            >
+              Huỷ
+            </Button>
+            <Button
+              onClick={() => void handleCreateCategory()}
+              disabled={isCreating}
+            >
+              {isCreating ? <Loader2 className="animate-spin" /> : null}
+              Tạo danh mục
             </Button>
           </SheetFooter>
         </SheetContent>

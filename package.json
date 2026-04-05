@@ -15,6 +15,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.2.2",
+    "@next/third-parties": "^16.2.2",
     "@tanstack/react-table": "^8.21.3",
     "@tinymce/tinymce-react": "^6.3.0",
     "class-variance-authority": "^0.7.1",

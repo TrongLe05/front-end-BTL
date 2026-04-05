@@ -13,6 +13,11 @@ export type CreateCategoryRequest = {
   parentId?: number | null;
 };
 
+type CreateCategoryApiResponse = {
+  message?: string;
+  category?: ApiCategory;
+} & Partial<ApiCategory>;
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export async function getCategories(
@@ -49,7 +54,14 @@ export async function createCategory(
     throw new Error(`Failed to create category: ${response.status}`);
   }
 
-  return (await response.json()) as ApiCategory;
+  const payload = (await response.json()) as CreateCategoryApiResponse;
+
+  // API can return either a plain category object or a wrapped object with "category".
+  if (payload.category) {
+    return payload.category;
+  }
+
+  return payload as ApiCategory;
 }
 
 export async function hideCategory(

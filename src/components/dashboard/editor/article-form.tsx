@@ -3,9 +3,9 @@ import { useRef } from "react";
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Category, ArticleRequest } from "@/types";
-import { createArticle } from "@/lib/api/article";
+import { createArticle, uploadArticleThumbnail } from "@/lib/api/article";
 import { getCurrentUserId } from "@/lib/auth";
-import { revalidateArticles } from "@/app/(admin)/articles/actions";
+import { revalidateArticles } from "@/lib/articles/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,10 +47,12 @@ export function ArticleForm({ categories, onSuccess }: ArticleFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const currentUserId = getCurrentUserId();
 
   const editorRef = useRef<TinyEditorHandle | null>(null);
   const contentRef = useRef("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [formData, setFormData] = useState<ArticleRequest>({
     categoryId: 0,
@@ -86,6 +88,13 @@ export function ArticleForm({ categories, onSuccess }: ArticleFormProps) {
     }));
   };
 
+  const handleThumbnailFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0] ?? null;
+    setThumbnailFile(file);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -94,7 +103,9 @@ export function ArticleForm({ categories, onSuccess }: ArticleFormProps) {
 
     try {
       if (!currentUserId) {
-        setError("Không xác định được tài khoản đăng nhập. Vui lòng đăng nhập lại.");
+        setError(
+          "Không xác định được tài khoản đăng nhập. Vui lòng đăng nhập lại.",
+        );
         setLoading(false);
         return;
       }
@@ -104,6 +115,15 @@ export function ArticleForm({ categories, onSuccess }: ArticleFormProps) {
         authorId: currentUserId,
         content: contentRef.current,
       };
+
+      if (thumbnailFile) {
+        const uploadedThumbnailUrl = await uploadArticleThumbnail(
+          thumbnailFile,
+          currentUserId,
+          formData.title,
+        );
+        payload.thumbnailUrl = uploadedThumbnailUrl;
+      }
 
       if (!payload.title || !payload.content || payload.categoryId === 0) {
         setError(
@@ -126,6 +146,10 @@ export function ArticleForm({ categories, onSuccess }: ArticleFormProps) {
           thumbnailUrl: "",
           status: "Draft",
         });
+        setThumbnailFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
         contentRef.current = "";
         editorRef.current?.setContent("");
 
@@ -274,15 +298,26 @@ export function ArticleForm({ categories, onSuccess }: ArticleFormProps) {
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <Label htmlFor="thumbnailUrl">URL hình ảnh (không bắt buộc)</Label>
+            <Label htmlFor="thumbnailFile">
+              Ảnh thumbnail (không bắt buộc)
+            </Label>
             <Input
-              id="thumbnailUrl"
-              name="thumbnailUrl"
-              value={formData.thumbnailUrl}
-              onChange={handleInputChange}
-              placeholder="Tải ảnh lên .."
+              id="thumbnailFile"
               type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleThumbnailFileChange}
             />
+            {thumbnailFile && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Đã chọn: {thumbnailFile.name}
+              </p>
+            )}
+            {formData.thumbnailUrl && (
+              <p className="mt-1 break-all text-xs text-muted-foreground">
+                URL ảnh: {formData.thumbnailUrl}
+              </p>
+            )}
           </div>
 
           <div>
@@ -317,6 +352,10 @@ export function ArticleForm({ categories, onSuccess }: ArticleFormProps) {
                 thumbnailUrl: "",
                 status: "Draft",
               });
+              setThumbnailFile(null);
+              if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+              }
               contentRef.current = "";
               editorRef.current?.setContent("");
               setError(null);

@@ -25,7 +25,8 @@ import {
   LogOutIcon,
 } from "lucide-react";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { clearAuthSession } from "@/lib/auth";
 
 export function NavUser({
   user,
@@ -37,6 +38,13 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    clearAuthSession();
+    router.push("/");
+    router.refresh();
+  };
 
   return (
     <SidebarMenu>
@@ -101,13 +109,11 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Link href="/">
-                <Button variant="outline" className="w-full">
-                  <LogOutIcon />
-                  Log out
-                </Button>
-              </Link>
+            <DropdownMenuItem onClick={handleLogout}>
+              <Button variant="outline" className="w-full">
+                <LogOutIcon />
+                Log out
+              </Button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
