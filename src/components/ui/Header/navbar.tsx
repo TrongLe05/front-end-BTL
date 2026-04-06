@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X } from "lucide-react";
-
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -16,25 +14,28 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
 import { Button } from "@/components/ui/button";
+
 import {
   clearAuthSession,
+  getCurrentUserDisplay,
+  type CurrentUserDisplay,
   getRedirectPathByRole,
   getAuthSnapshot,
   hasDashboardAccess,
   hydrateAuthCookiesFromStorage,
   isViewerRole,
 } from "@/lib/auth";
-import { getActiveServices, type Service } from "@/lib/api/service";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const components: {
   id: number;
@@ -74,11 +75,52 @@ const components: {
   },
 ];
 
+const services = [
+  {
+    id: 1,
+    title: "Thủ tục hành chính",
+    url: "/thu-tuc-hanh-chinh",
+    description:
+      "Cung cấp thông tin và hướng dẫn về các thủ tục hành chính tại Phường Cao Lãnh.",
+  },
+  {
+    id: 2,
+    title: "Nộp hồ sơ",
+    url: "/nop-ho-so",
+    description:
+      "Hỗ trợ nộp hồ sơ trực tuyến cho các dịch vụ công tại Phường Cao Lãnh.",
+  },
+  {
+    id: 3,
+    title: "Tra cứu hồ sơ",
+    url: "/tra-cuu-ho-so",
+    description:
+      "Cho phép người dân tra cứu tình trạng hồ sơ đã nộp tại Phường Cao Lãnh.",
+  },
+];
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length === 0) {
+    return "ND";
+  }
+
+  const first = parts[0]?.charAt(0) ?? "";
+  const last =
+    parts.length > 1 ? (parts[parts.length - 1]?.charAt(0) ?? "") : "";
+  const initials = `${first}${last}`.toUpperCase();
+
+  return initials || "ND";
+}
+
 export function Navbar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [services, setServices] = useState<Service[]>([]);
+  // const [services, setServices] = useState<Service[]>([]);
   const [authRole, setAuthRole] = useState<string | null>(null);
-  const hasFetchedServices = useRef(false);
+  const [currentUser, setCurrentUser] = useState<CurrentUserDisplay | null>(
+    null,
+  );
+  // const hasFetchedServices = useRef(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -97,12 +139,9 @@ export function Navbar() {
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
-  const closeMobileMenu = () => setIsMobileMenuOpen(false);
-
   const handleLogout = () => {
     clearAuthSession();
     setAuthRole(null);
-    closeMobileMenu();
     router.push("/");
     router.refresh();
   };
@@ -114,10 +153,12 @@ export function Navbar() {
 
       if (!token) {
         setAuthRole(null);
+        setCurrentUser(null);
         return;
       }
 
       setAuthRole(role ?? "");
+      setCurrentUser(getCurrentUserDisplay());
     };
 
     syncAuthState();
@@ -129,68 +170,6 @@ export function Navbar() {
       window.removeEventListener("focus", syncAuthState);
     };
   }, [pathname]);
-
-  useEffect(() => {
-    if (hasFetchedServices.current) {
-      return;
-    }
-
-    hasFetchedServices.current = true;
-    let isMounted = true;
-
-    const cacheKey = "navbar_services_v1";
-    const cacheTtlMs = 5 * 60 * 1000;
-
-    try {
-      const cachedRaw = sessionStorage.getItem(cacheKey);
-      if (cachedRaw) {
-        const cached: { timestamp: number; data: Service[] } =
-          JSON.parse(cachedRaw);
-        const isFresh = Date.now() - cached.timestamp < cacheTtlMs;
-
-        if (isFresh && Array.isArray(cached.data) && cached.data.length > 0) {
-          setServices(cached.data);
-        }
-      }
-    } catch {
-      // Ignore cache parsing errors and continue with network request.
-    }
-
-    const loadServices = async () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
-
-      try {
-        const activeServices = await getActiveServices(controller.signal);
-
-        if (isMounted) {
-          setServices(activeServices);
-        }
-
-        try {
-          sessionStorage.setItem(
-            cacheKey,
-            JSON.stringify({
-              timestamp: Date.now(),
-              data: activeServices,
-            }),
-          );
-        } catch {
-          // Ignore storage quota errors.
-        }
-      } catch (error) {
-        console.error("Cannot fetch services", error);
-      } finally {
-        clearTimeout(timeoutId);
-      }
-    };
-
-    loadServices();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   return (
     <div className="relative">
@@ -227,22 +206,20 @@ export function Navbar() {
 
             <NavigationMenuItem>
               <NavigationMenuTrigger className="text-lg hover:text-pink-600 hover:bg-pink-100 focus:bg-pink-100 focus:text-pink-600">
-                Dịch vụ
+                <Link href="/dich-vu">Dịch vụ</Link>
               </NavigationMenuTrigger>
               <NavigationMenuContent className="z-50 md:left-auto md:right-0">
-                <ul className="grid w-1000 gap-2 md:w-96 md:grid-cols-2 lg:w-96">
+                <ul className="grid w-1000 gap-2 md:w-96 md:grid-cols-1 lg:w-96">
                   {services.map((service) => (
                     <NavigationMenuLink
-                      key={service.serviceId}
+                      key={service.id}
                       className="hover:text-pink-600 hover:bg-pink-100"
                       asChild
                     >
-                      <Link
-                        href={`/dich-vu/${service.serviceId}?name=${encodeURIComponent(service.name)}`}
-                      >
+                      <Link href={`/dich-vu/${service.url}`}>
                         <div className="flex flex-col gap-1 text-base">
                           <div className="leading-none font-medium">
-                            {service.name}
+                            {service.title}
                           </div>
                           <div className="line-clamp-2 text-muted-foreground">
                             {service.description}
@@ -258,23 +235,48 @@ export function Navbar() {
         </NavigationMenu>
 
         <div className="hidden items-center gap-2 md:flex">
-          {canAccessAdmin ? (
-            <Link href={dashboardHref}>
-              <Button size="lg" className="text-lg" variant="secondary">
-                Quản trị
-              </Button>
-            </Link>
-          ) : null}
-
           {isAuthenticated ? (
-            <Button
-              size="lg"
-              className="text-lg"
-              variant="outline"
-              onClick={handleLogout}
-            >
-              Đăng xuất
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="rounded-full">
+                  <Avatar>
+                    <AvatarImage
+                      src={currentUser?.avatarUrl ?? undefined}
+                      alt={currentUser?.fullName ?? "Tài khoản"}
+                    />
+                    <AvatarFallback>
+                      {getInitials(currentUser?.fullName ?? "")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="grid flex-1 text-left leading-tight">
+                    <span className="truncate font-medium">
+                      {currentUser?.fullName ?? "Người dùng"}
+                    </span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {currentUser?.email ?? "Chưa cập nhật email"}
+                    </span>
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-32">
+                <DropdownMenuGroup>
+                  <DropdownMenuItem>
+                    {canAccessAdmin ? (
+                      <Link href={dashboardHref}>Quản trị</Link>
+                    ) : null}
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={handleLogout}
+                  >
+                    Đăng xuất
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Link href="/dang-nhap">
               <Button size="lg" className="text-lg" variant="outline">
@@ -283,98 +285,7 @@ export function Navbar() {
             </Link>
           )}
         </div>
-
-        <button
-          type="button"
-          aria-label={isMobileMenuOpen ? "Đóng menu" : "Mở menu"}
-          className="inline-flex items-center justify-center rounded-md border p-2 md:hidden"
-          onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-        >
-          {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
       </div>
-
-      {isMobileMenuOpen ? (
-        <div className="absolute left-0 top-full z-50 mt-2 w-full rounded-xl border bg-white p-4 shadow-lg md:hidden">
-          <nav className="flex flex-col gap-1">
-            {components.map((item) => (
-              <Link
-                key={item.id}
-                href={item.href}
-                onClick={closeMobileMenu}
-                className={`rounded-md px-3 py-2 text-base font-medium hover:bg-muted ${
-                  isRouteActive(item.href) ? "bg-pink-100 text-pink-600" : ""
-                }`}
-              >
-                {item.title}
-              </Link>
-            ))}
-            <div className="px-3">
-              <Select
-                onValueChange={(value) => {
-                  const selectedService = services.find(
-                    (service) => service.serviceId.toString() === value,
-                  );
-                  const serviceQuery = selectedService
-                    ? `?name=${encodeURIComponent(selectedService.name)}`
-                    : "";
-
-                  router.push(`/dich-vu/${value}${serviceQuery}`);
-                  closeMobileMenu();
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Dịch vụ" />
-                </SelectTrigger>
-                <SelectContent position="popper">
-                  <SelectGroup>
-                    {services.map((service) => (
-                      <SelectItem
-                        key={service.serviceId}
-                        value={service.serviceId.toString()}
-                      >
-                        {service.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {canAccessAdmin ? (
-              <Link
-                href={dashboardHref}
-                onClick={closeMobileMenu}
-                className="mt-3"
-              >
-                <Button className="w-full" variant="secondary">
-                  Quản trị
-                </Button>
-              </Link>
-            ) : null}
-
-            {isAuthenticated ? (
-              <Button
-                className="mt-3 w-full"
-                variant="outline"
-                onClick={handleLogout}
-              >
-                Đăng xuất
-              </Button>
-            ) : (
-              <Link
-                href="/dang-nhap"
-                onClick={closeMobileMenu}
-                className="mt-3"
-              >
-                <Button className="w-full" variant="outline">
-                  Đăng nhập
-                </Button>
-              </Link>
-            )}
-          </nav>
-        </div>
-      ) : null}
     </div>
   );
 }

@@ -27,7 +27,12 @@ import {
   DatabaseIcon,
   FileChartColumnIcon,
   FileIcon,
+  ArrowLeft,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
 
 const data = {
   user: {
@@ -58,39 +63,39 @@ const data = {
     },
   ],
   navSecondary: [
+    // {
+    //   title: "Settings",
+    //   url: "#",
+    //   icon: <Settings2Icon />,
+    // },
+    // {
+    //   title: "Get Help",
+    //   url: "#",
+    //   icon: <CircleHelpIcon />,
+    // },
     {
-      title: "Settings",
-      url: "#",
-      icon: <Settings2Icon />,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: <CircleHelpIcon />,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: <SearchIcon />,
-    },
-  ],
-  documents: [
-    {
-      name: "Quản lý thủ tục hành chính",
-      url: "#",
-      icon: <DatabaseIcon />,
-    },
-    {
-      name: "Quản lý hồ sơ",
-      url: "#",
-      icon: <FileChartColumnIcon />,
-    },
-    {
-      name: "Cập nhật trạng thái",
-      url: "#",
-      icon: <FileIcon />,
+      title: "Trở về trang chủ",
+      url: "/",
+      icon: <ArrowLeft />,
     },
   ],
+  // documents: [
+  //   {
+  //     name: "Quản lý thủ tục hành chính",
+  //     url: "#",
+  //     icon: <DatabaseIcon />,
+  //   },
+  //   {
+  //     name: "Quản lý hồ sơ",
+  //     url: "#",
+  //     icon: <FileChartColumnIcon />,
+  //   },
+  //   {
+  //     name: "Cập nhật trạng thái",
+  //     url: "#",
+  //     icon: <FileIcon />,
+  //   },
+  // ],
 };
 export function SidebarAdmin({
   ...props
@@ -99,34 +104,38 @@ export function SidebarAdmin({
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
-            >
-              <a href="#">
-                <img
-                  src="/Logo_TPCaoLanh.svg"
-                  alt="logo"
-                  width={30}
-                  height={30}
-                />
-                <span className="text-xl font-bold">Phường Cao Lãnh</span>
-              </a>
-            </SidebarMenuButton>
-            <div className="text-sm text-muted-foreground ">
-              <p>Quản lý hệ thống</p>
+          <a className="flex items-center gap-2 w-full px-2 py-1 ">
+            <Image
+              src="/Logo_TPCaoLanh.svg"
+              alt="logo"
+              width={52}
+              height={52}
+              className="size-13"
+            />
+            <div className="flex flex-col leading-tight">
+              <span className="text-xl font-semibold tracking-tight">
+                Phường Cao Lãnh
+              </span>
+              <span className="text-base text-muted-foreground">
+                Quản lý hệ thống
+              </span>
             </div>
-          </SidebarMenuItem>
+          </a>
         </SidebarMenu>
       </SidebarHeader>
+
+      <Separator />
+
       <SidebarContent>
         <NavMainAdmin items={data.navMain} />
-        <NavDocuments items={data.documents} />
+        {/* <NavDocuments items={data.documents} /> */}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
+
+      <Separator />
+
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );

@@ -101,6 +101,12 @@ export function LoginForm({
         role,
         userId: userInfo?.userId ?? userInfo?.UserId,
         fullName: userInfo?.fullName ?? userInfo?.FullName,
+        email: userInfo?.email ?? userInfo?.Email ?? values.email.trim(),
+        avatarUrl:
+          userInfo?.avatarUrl ??
+          userInfo?.AvatarUrl ??
+          userInfo?.profileImage ??
+          userInfo?.ProfileImage,
       });
 
       const callbackUrl = searchParams.get("callbackUrl");

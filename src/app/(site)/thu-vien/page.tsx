@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { API_BASE_URL } from "@/lib/api/config";
 
 type GalleryApiItem = {
   imageId?: number;
@@ -26,6 +27,21 @@ type GalleryItem = {
   createdAt?: string;
 };
 
+function getFolderName(section: string): string {
+  const normalized = section.trim().replace(/\\/g, "/");
+  const parts = normalized.split("/").filter(Boolean);
+
+  return parts[parts.length - 1] || "Thu vien";
+}
+
+function isThumbnailFolder(section: string): boolean {
+  const normalized = section.trim().replace(/\\/g, "/");
+  return normalized
+    .split("/")
+    .filter(Boolean)
+    .some((part) => part.toLowerCase() === "thumbnail");
+}
+
 function normalizeGalleryResponse(payload: unknown): GalleryApiItem[] {
   // Backend có thể trả về mảng trực tiếp hoặc bọc trong wrapper object
   if (Array.isArray(payload)) {
@@ -50,6 +66,10 @@ function mapGalleryItem(
   item: GalleryApiItem,
   index: number,
 ): GalleryItem | null {
+  if (item.section && isThumbnailFolder(item.section)) {
+    return null;
+  }
+
   // Chuẩn hóa ID: ưu tiên imageId từ backend
   const itemId = item.imageId ?? item.id ?? index + 1;
 
@@ -71,13 +91,30 @@ function mapGalleryItem(
 }
 
 export default function ThuVienPage() {
-  const apiBaseUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5265";
+  const apiBaseUrl = API_BASE_URL;
 
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const galleryByFolder = useMemo(() => {
+    const groups = new Map<string, GalleryItem[]>();
+
+    gallery.forEach((item) => {
+      const folderName = getFolderName(item.section);
+      const existing = groups.get(folderName) ?? [];
+      existing.push(item);
+      groups.set(folderName, existing);
+    });
+
+    return Array.from(groups.entries())
+      .map(([folderName, items]) => ({
+        folderName,
+        items,
+      }))
+      .sort((a, b) => a.folderName.localeCompare(b.folderName, "vi"));
+  }, [gallery]);
 
   useEffect(() => {
     let isMounted = true;
@@ -156,45 +193,58 @@ export default function ThuVienPage() {
       ) : null}
 
       {!isLoading && !error && gallery.length > 0 ? (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {gallery.map((item) => (
-              <article
-                key={item.id}
-                className="overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-lg"
-              >
-                <div
-                  className="relative h-56 w-full bg-muted overflow-hidden group cursor-pointer"
-                  onClick={() => setSelectedImage(item.imageUrl)}
-                >
-                  <img
-                    src={item.imageUrl}
-                    alt={item.title}
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                    loading="lazy"
-                    onError={(e) => {
-                      // Fallback hiển thị ảnh mặc định khi bị 404 để không vỡ UI
-                      e.currentTarget.src = "/empty.jpg";
-                      e.currentTarget.onerror = null; // Tránh lặp vô hạn nếu ảnh fallback cũng lỗi
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="text-white font-medium">
-                      Bấm để xem ảnh lớn
-                    </span>
-                  </div>
-                </div>
-                <div className="space-y-1 p-4">
-                  <h2 className="line-clamp-1 text-base font-semibold">
-                    {item.title}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Phân loại: {item.section}
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
+        <div className="space-y-8">
+          {galleryByFolder.map((group) => (
+            <div key={group.folderName} className="space-y-4">
+              <div className="flex items-end justify-between border-b pb-2">
+                <h2 className="text-xl font-bold uppercase tracking-tight text-slate-900">
+                  Thu muc: {group.folderName}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {group.items.length} anh
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {group.items.map((item) => (
+                  <article
+                    key={item.id}
+                    className="overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-lg"
+                  >
+                    <div
+                      className="relative h-56 w-full bg-muted overflow-hidden group cursor-pointer"
+                      onClick={() => setSelectedImage(item.imageUrl)}
+                    >
+                      <img
+                        src={item.imageUrl}
+                        alt={item.title}
+                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                        loading="lazy"
+                        onError={(e) => {
+                          // Fallback hiển thị ảnh mặc định khi bị 404 để không vỡ UI
+                          e.currentTarget.src = "/empty.jpg";
+                          e.currentTarget.onerror = null; // Tránh lặp vô hạn nếu ảnh fallback cũng lỗi
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-white font-medium">
+                          Bấm để xem ảnh lớn
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-1 p-4">
+                      <h3 className="line-clamp-1 text-base font-semibold">
+                        {item.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Phân loại: {item.section}
+                      </p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       ) : null}
 

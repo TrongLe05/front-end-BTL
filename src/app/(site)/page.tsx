@@ -14,11 +14,7 @@ import Image from "next/image";
 import { getLatestArticles } from "@/lib/api/article";
 import { Article } from "@/types";
 import { Separator } from "@/components/ui/separator";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:5265";
+import { API_BASE_URL } from "@/lib/api/config";
 
 function formatDate(dateValue?: string): string {
   if (!dateValue) {

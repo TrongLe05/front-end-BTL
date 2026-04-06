@@ -2,8 +2,7 @@ import Link from "next/link";
 import { getArticles } from "@/lib/api/article";
 import { Article } from "@/types";
 import Image from "next/image";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+import { API_BASE_URL } from "@/lib/api/config";
 
 function resolveThumbnailUrl(thumbnailUrl?: string): string {
   if (!thumbnailUrl) {

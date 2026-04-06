@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { API_BASE_URL } from "@/lib/api/config";
 import {
   Select,
   SelectContent,
@@ -28,7 +29,7 @@ type UploadApiResponse = {
 };
 
 export function MediaUploadForm() {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5265";
+  const apiBaseUrl = API_BASE_URL;
 
   const [section, setSection] = useState("");
   const [title, setTitle] = useState("");

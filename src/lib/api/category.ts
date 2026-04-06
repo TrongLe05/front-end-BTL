@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "@/lib/api/config";
+
 export type ApiCategory = {
   categoryId: number;
   parentId?: number | null;
@@ -17,8 +19,6 @@ type CreateCategoryApiResponse = {
   message?: string;
   category?: ApiCategory;
 } & Partial<ApiCategory>;
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export async function getCategories(
   signal?: AbortSignal,

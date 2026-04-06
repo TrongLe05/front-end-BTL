@@ -24,13 +24,16 @@ import {
   FilePen,
   Trash2Icon,
   ImagePlus,
+  ArrowLeft,
 } from "lucide-react";
+import Image from "next/image";
+import { Separator } from "@/components/ui/separator";
 
 const data = {
   user: {
     name: "shadcn",
     email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    avatar: "/avatar.png",
   },
   navMain: [
     {
@@ -60,20 +63,20 @@ const data = {
     },
   ],
   navSecondary: [
+    // {
+    //   title: "Settings",
+    //   url: "#",
+    //   icon: <Settings2Icon />,
+    // },
+    // {
+    //   title: "Get Help",
+    //   url: "#",
+    //   icon: <CircleHelpIcon />,
+    // },
     {
-      title: "Settings",
-      url: "#",
-      icon: <Settings2Icon />,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: <CircleHelpIcon />,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: <SearchIcon />,
+      title: "Trở về trang chủ",
+      url: "/",
+      icon: <ArrowLeft />,
     },
   ],
   //   documents: [
@@ -102,31 +105,35 @@ export function SidebarArticle({
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
-            >
-              <a href="#">
-                <img
-                  src="/Logo_TPCaoLanh.svg"
-                  alt="logo"
-                  width={30}
-                  height={30}
-                />
-                <span className="text-xl font-bold">Phường Cao Lãnh</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <a className="flex items-center gap-2 py-2 w-full">
+            <Image
+              src="/Logo_TPCaoLanh.svg"
+              alt="logo"
+              width={52}
+              height={52}
+              className="size-13"
+            />
+            <div className="flex flex-col leading-tight">
+              <span className="text-xl font-semibold tracking-tight">
+                Phường Cao Lãnh
+              </span>
+              <span className="text-base text-muted-foreground">
+                Quản lý hệ thống
+              </span>
+            </div>
+          </a>
         </SidebarMenu>
       </SidebarHeader>
+      <Separator />
       <SidebarContent>
         <NavMain items={data.navMain} />
         {/* <NavDocuments items={data.documents} /> */}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
+
+      <Separator />
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );

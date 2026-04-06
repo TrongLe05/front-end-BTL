@@ -1,8 +1,12 @@
+import { API_BASE_URL } from "@/lib/api/config";
+
 type AuthSessionInput = {
   token: string;
   role: string;
   userId?: number;
   fullName?: string;
+  email?: string;
+  avatarUrl?: string;
 };
 
 export const HOME_PATH = "/";
@@ -25,7 +29,15 @@ type AuthSnapshot = {
 type AuthProfile = {
   userId?: number;
   fullName?: string;
+  email?: string;
+  avatarUrl?: string;
   role?: string;
+};
+
+export type CurrentUserDisplay = {
+  fullName: string;
+  email: string | null;
+  avatarUrl: string | null;
 };
 
 const ADMIN_ROLE_KEYS = new Set(["admin"]);
@@ -73,7 +85,7 @@ function clearCookieValue(name: string): void {
 }
 
 export function getApiBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5265";
+  return API_BASE_URL;
 }
 
 export function normalizeRole(role: string): string {
@@ -124,6 +136,8 @@ export function setAuthSession(input: AuthSessionInput): void {
     JSON.stringify({
       userId: input.userId,
       fullName: input.fullName,
+      email: input.email,
+      avatarUrl: input.avatarUrl,
       role,
     }),
   );
@@ -221,6 +235,24 @@ export function getCurrentUserId(): number | null {
   }
 
   return null;
+}
+
+export function getCurrentUserDisplay(): CurrentUserDisplay | null {
+  const profile = getAuthProfile();
+
+  if (!profile) {
+    return null;
+  }
+
+  const fullName = profile.fullName?.trim() || "Người dùng";
+  const email = profile.email?.trim() || null;
+  const avatarUrl = profile.avatarUrl?.trim() || null;
+
+  return {
+    fullName,
+    email,
+    avatarUrl,
+  };
 }
 
 export function hydrateAuthCookiesFromStorage(): void {

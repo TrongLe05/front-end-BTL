@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "@/lib/api/config";
+
 export type ApiUser = {
   userId: number;
   roleId: number;
@@ -17,9 +19,6 @@ export type ApiRole = {
   roleName: string;
   description?: string | null;
 };
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5265";
 
 type GetUsersParams = {
   roleId?: number;
