@@ -39,7 +39,7 @@ export async function getCategories(): Promise<Category[]> {
 
 export async function getArticles() {
   try {
-    const response = await fetch(`${API_PREFIX}/Article`, {
+    const response = await fetch(`${API_PREFIX}/PublicArticle`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -81,7 +81,7 @@ export async function getArticlesByAuthor(authorId: number) {
 
 export async function getLatestArticles() {
   try {
-    const response = await fetch(`${API_PREFIX}/Article/latest`, {
+    const response = await fetch(`${API_PREFIX}/PublicArticle/latest`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
