@@ -97,9 +97,15 @@ export function ArticleEditFormPage({
             </SelectTrigger>
             <SelectContent>
               {articles.length === 0 ? (
-                <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                  Không có bài viết nào
-                </div>
+                <SelectItem key="no-articles" value="none">
+                  <div className="flex flex-col">
+                    <span>Bạn chưa có bài viết nào</span>
+                    <span className="text-xs text-muted-foreground">
+                      Bạn chưa có bài viết nào. Vui lòng tạo bài viết mới trước
+                      khi sửa.
+                    </span>
+                  </div>
+                </SelectItem>
               ) : (
                 articles.map((article) => (
                   <SelectItem

@@ -66,6 +66,28 @@ export async function getArticles() {
   }
 }
 
+export async function getArticlesByAuthor(authorId: number) {
+  try {
+    const response = await fetch(`${API_PREFIX}/Article/author/${authorId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch articles by author ${authorId}: ${response.statusText}`,
+      );
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching articles by author:", error);
+    return [];
+  }
+}
+
 export async function getLatestArticles() {
   try {
     const response = await fetch(`${API_PREFIX}/Article/latest`, {
@@ -194,7 +216,7 @@ export async function uploadArticleThumbnail(
     formData.append("title", title.trim());
   }
 
-  const response = await fetch(`${API_PREFIX}/admin/Gallery/upload`, {
+  const response = await fetch(`${API_PREFIX}/admin/gallery/upload`, {
     method: "POST",
     body: formData,
   });

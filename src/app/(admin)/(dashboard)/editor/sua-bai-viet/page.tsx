@@ -2,14 +2,53 @@ import { Suspense } from "react";
 import { SidebarArticle } from "@/components/dashboard/editor/sidebar-article";
 import { SiteHeaderArticle } from "@/components/dashboard/editor/site-header-article";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { getCategories, getArticles } from "@/lib/api/article";
+import { cookies } from "next/headers";
+import {
+  getCategories,
+  getArticles,
+  getArticlesByAuthor,
+} from "@/lib/api/article";
 import { ArticleEditFormPage } from "@/components/dashboard/editor/article-edit-page";
 
+function getAuthorIdFromToken(token?: string): number | null {
+  if (!token) {
+    return null;
+  }
+
+  const parts = token.split(".");
+  if (parts.length < 2) {
+    return null;
+  }
+
+  try {
+    const payload = Buffer.from(parts[1], "base64url").toString("utf-8");
+    const claims = JSON.parse(payload) as Record<string, unknown>;
+    const claimUserId =
+      claims.nameid ??
+      claims.sub ??
+      claims[
+        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+      ];
+
+    const parsedUserId = Number(claimUserId);
+    if (Number.isFinite(parsedUserId) && parsedUserId > 0) {
+      return parsedUserId;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 async function ArticlePageContent() {
-  const [categories, articles] = await Promise.all([
-    getCategories(),
-    getArticles(),
-  ]);
+  const cookieStore = await cookies();
+  const token = cookieStore.get("px_token")?.value;
+  const authorId = getAuthorIdFromToken(token);
+
+  const articles = authorId ? await getArticlesByAuthor(authorId) : [];
+
+  const [categories] = await Promise.all([getCategories()]);
 
   return (
     <div className="flex flex-1 flex-col">

@@ -28,8 +28,7 @@ type UploadApiResponse = {
 };
 
 export function MediaUploadForm() {
-  const apiBaseUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5265";
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5265";
 
   const [section, setSection] = useState("");
   const [title, setTitle] = useState("");
@@ -164,7 +163,7 @@ export function MediaUploadForm() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/Gallery/upload`, {
+      const response = await fetch(`${apiBaseUrl}/admin/gallery/upload`, {
         method: "POST",
         body: formData,
       });
