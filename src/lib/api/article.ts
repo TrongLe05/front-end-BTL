@@ -39,7 +39,7 @@ export async function getCategories(): Promise<Category[]> {
 
 export async function getArticles() {
   try {
-    const response = await fetch(`${API_PREFIX}/PublicArticle`, {
+    const response = await fetch(`${API_PREFIX}/Article`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
