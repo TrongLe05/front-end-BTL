@@ -205,7 +205,7 @@ export function Navbar() {
             ))}
 
             <NavigationMenuItem>
-              <NavigationMenuTrigger className="text-lg hover:text-pink-600 hover:bg-pink-100 focus:bg-pink-100 focus:text-pink-600">
+              <NavigationMenuTrigger className="rounded-full px-4 text-base font-medium transition-all duration-200 hover:border-border/70 hover:bg-secondary/70 focus:bg-secondary/70">
                 <Link href="/dich-vu">Dịch vụ</Link>
               </NavigationMenuTrigger>
               <NavigationMenuContent className="z-50 md:left-auto md:right-0">

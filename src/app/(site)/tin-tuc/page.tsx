@@ -4,6 +4,8 @@ import { Article } from "@/types";
 import Image from "next/image";
 import { API_BASE_URL } from "@/lib/api/config";
 
+export const revalidate = 300;
+
 function resolveThumbnailUrl(thumbnailUrl?: string): string {
   if (!thumbnailUrl) {
     return "";

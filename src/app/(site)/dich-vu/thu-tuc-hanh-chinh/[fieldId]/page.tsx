@@ -17,8 +17,18 @@ import {
 import { ProcedureDataTable } from "@/components/procedure-data-table";
 import { Badge } from "@/components/ui/badge";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 900;
+
+export async function generateStaticParams() {
+  try {
+    const fields = await getProcedureFields();
+    return fields.map((field) => ({
+      fieldId: String(field.serviceCategoryId),
+    }));
+  } catch {
+    return [];
+  }
+}
 
 type FieldProcedurePageProps = {
   params: Promise<{

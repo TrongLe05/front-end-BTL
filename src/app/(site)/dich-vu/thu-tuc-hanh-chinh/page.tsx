@@ -10,8 +10,7 @@ import {
 } from "@/components/ui/card";
 import { getProcedureFields, type ProcedureField } from "@/lib/api/procedure";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 900;
 
 export default async function Page() {
   let fields: ProcedureField[] = [];

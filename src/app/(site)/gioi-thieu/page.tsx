@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-
+export const dynamic = "force-static"; // SSG
 const introSections = [
   {
     title: "Lịch sử hình thành",

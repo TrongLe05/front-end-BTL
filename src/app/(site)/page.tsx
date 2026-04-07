@@ -16,6 +16,8 @@ import { Article } from "@/types";
 import { Separator } from "@/components/ui/separator";
 import { API_BASE_URL } from "@/lib/api/config";
 
+export const revalidate = 300;
+
 function formatDate(dateValue?: string): string {
   if (!dateValue) {
     return "Chưa cập nhật";
@@ -78,10 +80,36 @@ const basicStats = [
 
 export default async function Home() {
   const featuredNews = (await getLatestArticles()) as Article[];
+  const latestNews = featuredNews.slice(0, 5);
+  const tickerItems = [...latestNews, ...latestNews];
 
   return (
     <div className="pb-12">
       <Hero />
+
+      {latestNews.length > 0 ? (
+        <section
+          aria-label="5 tin tức mới nhất"
+          className="border-y bg-muted/30"
+        >
+          <div className="container mx-auto overflow-hidden px-0 md:px-6">
+            <div className="flex w-max items-center gap-3 py-3 motion-reduce:animate-none animate-[news-ticker-scroll_28s_linear_infinite]">
+              {tickerItems.map((news, index) => (
+                <Link
+                  key={`${news.articleId}-${index}`}
+                  href={`/tin-tuc/${news.articleId}`}
+                  className="shrink-0 rounded-full border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                >
+                  <span className="mr-2 inline-block rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
+                    Mới
+                  </span>
+                  {news.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <main className="container mx-auto mt-8 space-y-10 px-6">
         <section aria-labelledby="tong-quan" className="grid gap-6">

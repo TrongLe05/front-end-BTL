@@ -28,7 +28,10 @@ export async function getProcedureFields(): Promise<ProcedureField[]> {
     headers: {
       Accept: "application/json",
     },
-    cache: "no-store",
+    next: {
+      revalidate: 900,
+      tags: ["procedure-fields"],
+    },
   });
 
   if (!response.ok) {
@@ -70,7 +73,10 @@ export async function getProceduresByField(
     headers: {
       Accept: "application/json",
     },
-    cache: "no-store",
+    next: {
+      revalidate: 900,
+      tags: ["procedure-field", `procedure-field-${fieldId}`],
+    },
   });
 
   if (response.status === 404) {

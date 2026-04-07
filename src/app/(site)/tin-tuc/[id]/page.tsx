@@ -1,11 +1,18 @@
-import { getArticleById } from "@/lib/api/article";
-import { getCommentsByArticle } from "@/lib/api/comment";
+import { getArticleById, getArticles } from "@/lib/api/article";
 import { Article } from "@/types";
 import { Separator } from "@/components/ui/separator";
 import { ArticleComments } from "@/components/article-comments";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  try {
+    const articles = (await getArticles()) as Article[];
+    return articles.map((article) => ({ id: String(article.articleId) }));
+  } catch {
+    return [];
+  }
+}
 
 type DetailPageProps = {
   params: Promise<{
@@ -26,7 +33,6 @@ export default async function TinTucDetailPage({ params }: DetailPageProps) {
   }
 
   const article = (await getArticleById(articleId)) as Article | null;
-  const comments = await getCommentsByArticle(articleId).catch(() => []);
 
   if (!article) {
     return (
@@ -57,7 +63,7 @@ export default async function TinTucDetailPage({ params }: DetailPageProps) {
           <ArticleComments
             key={articleId}
             articleId={articleId}
-            initialComments={comments}
+            initialComments={[]}
           />
         </div>
       </section>
