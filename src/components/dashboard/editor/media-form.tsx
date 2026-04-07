@@ -164,7 +164,7 @@ export function MediaUploadForm() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/admin/gallery/upload`, {
+      const response = await fetch(`${apiBaseUrl}/api/admin/gallery/upload`, {
         method: "POST",
         body: formData,
       });
