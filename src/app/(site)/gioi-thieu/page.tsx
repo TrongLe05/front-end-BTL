@@ -28,14 +28,16 @@ const introSections = [
 export default function GioiThieuPage() {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-8 md:py-10">
-      <div className="relative h-[360px] rounded-2xl border-2 border-pink-200 shadow-sm overflow-hidden">
+      <div className="relative h-[260px] overflow-hidden rounded-2xl border-2 border-pink-200 shadow-sm sm:h-[320px] md:h-[380px]">
         {/* <div className="absolute inset-0 bg-[url('/khu-di-tich-nguyen-sinh-sac-cover.png')] bg-cover bg-center"></div> */}
         <Image
           src="/khu-di-tich-nguyen-sinh-sac-cover.png"
           alt="Khu di tích Nguyên Sinh Sắc"
           fill
-          className="object-cover"
-          loading="lazy"
+          className="object-cover object-center"
+          priority
+          quality={85}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 92vw, 1200px"
         />
         <div className="absolute inset-0 bg-black/10"></div>
 
