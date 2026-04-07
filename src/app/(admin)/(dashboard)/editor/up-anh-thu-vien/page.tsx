@@ -3,12 +3,12 @@ import { SidebarArticle } from "@/components/dashboard/editor/sidebar-article";
 import { SiteHeaderArticle } from "@/components/dashboard/editor/site-header-article";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { MediaUploadForm } from "@/components/dashboard/editor/media-form";
-import { getCategories, getArticles } from "@/lib/api/article";
+import { getCategories, getAdminArticles } from "@/lib/api/article";
 
 async function ArticlePageContent() {
   const [categories, articles] = await Promise.all([
     getCategories(),
-    getArticles(),
+    getAdminArticles(),
   ]);
 
   return (

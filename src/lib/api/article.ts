@@ -37,9 +37,29 @@ export async function getCategories(): Promise<Category[]> {
   }
 }
 
-export async function getArticles() {
+export async function getAdminArticles() {
   try {
     const response = await fetch(`${API_PREFIX}/Article`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch articles: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching articles:", error);
+    return [];
+  }
+}
+
+export async function getPublicArticles() {
+  try {
+    const response = await fetch(`${API_PREFIX}/PublicArticle`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

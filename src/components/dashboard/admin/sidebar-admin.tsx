@@ -28,6 +28,7 @@ import {
   FileChartColumnIcon,
   FileIcon,
   ArrowLeft,
+  Briefcase,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -60,6 +61,11 @@ const data = {
       title: "Quản lý danh mục",
       url: "/quan-ly-danh-muc",
       icon: <FolderTree />,
+    },
+    {
+      title: "Quản lý dịch vụ",
+      url: "/quan-ly-dich-vu",
+      icon: <Briefcase />,
     },
   ],
   navSecondary: [

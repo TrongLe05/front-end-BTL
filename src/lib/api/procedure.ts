@@ -21,16 +21,15 @@ export type ProcedureByField = {
   createdAt: string | null;
 };
 
+// export async function getProceduresFields(): Promise<ProcedureByField[]> {}
+
 export async function getProcedureFields(): Promise<ProcedureField[]> {
   const endpoint = `${API_PREFIX}/public/applications/fields`;
 
   const response = await fetch(endpoint, {
+    cache: "no-store",
     headers: {
       Accept: "application/json",
-    },
-    next: {
-      revalidate: 900,
-      tags: ["procedure-fields"],
     },
   });
 
@@ -70,12 +69,9 @@ export async function getProceduresByField(
   const endpoint = `${API_PREFIX}/public/applications/fields/${fieldId}/procedures`;
 
   const response = await fetch(endpoint, {
+    cache: "no-store",
     headers: {
       Accept: "application/json",
-    },
-    next: {
-      revalidate: 900,
-      tags: ["procedure-field", `procedure-field-${fieldId}`],
     },
   });
 
@@ -118,4 +114,96 @@ export async function getProceduresByField(
       templateFileUrl: item.templateFileUrl ?? null,
       createdAt: item.createdAt ?? null,
     }));
+}
+
+export async function submitPublicApplication(
+  formData: FormData,
+): Promise<{
+  applicationCode: string;
+  applicationId: number;
+  message: string;
+}> {
+  const endpoints = [`${API_PREFIX}/public/applications/submit`];
+
+  let lastError: Error | null = null;
+
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const responseData = (await response.json()) as {
+          Message?: string;
+          ApplicationCode?: string;
+          ApplicationId?: number;
+        };
+        return {
+          applicationCode: responseData.ApplicationCode ?? "",
+          applicationId: responseData.ApplicationId ?? 0,
+          message: responseData.Message ?? "Nộp hồ sơ thành công!",
+        };
+      }
+
+      if (response.status === 405) {
+        throw new Error(
+          "Backend chưa hỗ trợ phương thức POST cho PublicApplications.",
+        );
+      }
+
+      if (response.status !== 404) {
+        const errorData = await response.json().catch(() => null);
+
+        if (
+          response.status === 400 &&
+          errorData &&
+          typeof errorData === "object" &&
+          "errors" in errorData &&
+          errorData.errors &&
+          typeof errorData.errors === "object"
+        ) {
+          const errors = errorData.errors as Record<string, string[] | string>;
+          const details = Object.entries(errors)
+            .map(([key, value]) => {
+              const message = Array.isArray(value) ? value[0] : value;
+              return `${key}: ${message}`;
+            })
+            .join(" | ");
+
+          throw new Error(
+            details ||
+              `Dữ liệu hồ sơ chưa đúng định dạng backend yêu cầu (${endpoint}).`,
+          );
+        }
+
+        const message =
+          errorData &&
+          typeof errorData === "object" &&
+          "Message" in errorData &&
+          typeof errorData.Message === "string"
+            ? errorData.Message
+            : errorData &&
+                typeof errorData === "object" &&
+                "title" in errorData &&
+                typeof errorData.title === "string"
+              ? errorData.title
+              : `Không thể nộp hồ sơ: ${response.status} (${endpoint})`;
+
+        throw new Error(message);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        lastError = error;
+      }
+      continue;
+    }
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+
+  throw new Error("Hệ thống chưa hỗ trợ endpoint nộp hồ sơ công khai.");
 }

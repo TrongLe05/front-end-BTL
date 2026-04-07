@@ -1,4 +1,4 @@
-import { getArticleById, getArticles } from "@/lib/api/article";
+import { getArticleById, getPublicArticles } from "@/lib/api/article";
 import { Article } from "@/types";
 import { Separator } from "@/components/ui/separator";
 import { ArticleComments } from "@/components/article-comments";
@@ -7,7 +7,7 @@ export const revalidate = 300;
 
 export async function generateStaticParams() {
   try {
-    const articles = (await getArticles()) as Article[];
+    const articles = (await getPublicArticles()) as Article[];
     return articles.map((article) => ({ id: String(article.articleId) }));
   } catch {
     return [];

@@ -7,7 +7,7 @@ import { Eye, Loader2, Trash2 } from "lucide-react";
 import {
   deleteArticle,
   getArticleById,
-  getArticles,
+  getAdminArticles,
   updateArticle,
 } from "@/lib/api/article";
 import { type Article } from "@/types";
@@ -119,7 +119,7 @@ export function ArticleModerationTable() {
   const loadArticles = React.useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = (await getArticles()) as Article[];
+      const data = (await getAdminArticles()) as Article[];
       setArticles(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Cannot load articles", error);
