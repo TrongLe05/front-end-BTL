@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const introSections = [
@@ -28,7 +29,14 @@ export default function GioiThieuPage() {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-8 md:py-10">
       <div className="relative h-[360px] rounded-2xl border-2 border-pink-200 shadow-sm overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/khu-di-tich-nguyen-sinh-sac-cover.png')] bg-cover bg-center"></div>
+        {/* <div className="absolute inset-0 bg-[url('/khu-di-tich-nguyen-sinh-sac-cover.png')] bg-cover bg-center"></div> */}
+        <Image
+          src="/khu-di-tich-nguyen-sinh-sac-cover.png"
+          alt="Khu di tích Nguyên Sinh Sắc"
+          fill
+          className="object-cover"
+          loading="lazy"
+        />
         <div className="absolute inset-0 bg-black/10"></div>
 
         {/* <h1 className="absolute top-40 left-5 text-2xl font-bold text-pink-100 md:text-4xl">
