@@ -236,7 +236,9 @@ export function ArticleComments({
       return;
     }
 
-    setComments((previous) => previous.filter((item) => item.commentId !== commentId));
+    setComments((previous) =>
+      previous.filter((item) => item.commentId !== commentId),
+    );
 
     if (editingCommentId === commentId) {
       handleCancelEdit();
@@ -313,77 +315,79 @@ export function ArticleComments({
 
                   return (
                     <>
-                <div className="mb-2 flex items-center gap-3">
-                  <Avatar size="sm">
-                    <AvatarFallback>
-                      {getInitials(comment.userName || "U")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-semibold">
-                      {comment.userName || "Người dùng"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatCreatedAt(comment.createdAt)}
-                      {comment.updatedAt ? " • Đã chỉnh sửa" : ""}
-                    </p>
-                  </div>
-                  {isOwner ? (
-                    <div className="ml-auto flex items-center gap-2">
-                      {isEditing ? null : (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleStartEdit(comment)}
-                        >
-                          Sửa
-                        </Button>
+                      <div className="mb-2 flex items-center gap-3">
+                        <Avatar size="sm">
+                          <AvatarFallback>
+                            {getInitials(comment.userName || "U")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-sm font-semibold">
+                            {comment.userName || "Người dùng"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatCreatedAt(comment.createdAt)}
+                            {comment.updatedAt ? " • Đã chỉnh sửa" : ""}
+                          </p>
+                        </div>
+                        {isOwner ? (
+                          <div className="ml-auto flex items-center gap-2">
+                            {isEditing ? null : (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleStartEdit(comment)}
+                              >
+                                Sửa
+                              </Button>
+                            )}
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDelete(comment.commentId)}
+                            >
+                              Xoá
+                            </Button>
+                          </div>
+                        ) : null}
+                      </div>
+                      {isEditing ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            value={editingContent}
+                            onChange={(event) =>
+                              setEditingContent(event.target.value)
+                            }
+                            rows={3}
+                            maxLength={1000}
+                          />
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={handleCancelEdit}
+                            >
+                              Huỷ
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="bg-pink-600"
+                              onClick={() => handleSaveEdit(comment.commentId)}
+                              disabled={!editingContent.trim()}
+                            >
+                              Lưu
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                          {comment.content}
+                        </p>
                       )}
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(comment.commentId)}
-                      >
-                        Xoá
-                      </Button>
-                    </div>
-                  ) : null}
-                </div>
-                {isEditing ? (
-                  <div className="space-y-2">
-                    <Textarea
-                      value={editingContent}
-                      onChange={(event) => setEditingContent(event.target.value)}
-                      rows={3}
-                      maxLength={1000}
-                    />
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={handleCancelEdit}
-                      >
-                        Huỷ
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        className="bg-pink-600"
-                        onClick={() => handleSaveEdit(comment.commentId)}
-                        disabled={!editingContent.trim()}
-                      >
-                        Lưu
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                    {comment.content}
-                  </p>
-                )}
                     </>
                   );
                 })()}
