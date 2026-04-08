@@ -67,6 +67,8 @@ export function ArticleComments({
     visibleInitialComments.length === 0,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingContent, setEditingContent] = useState("");
   const [loadError, setLoadError] = useState<string | null>(null);
   const [authState, setAuthState] = useState<{
     isLoggedIn: boolean;
@@ -195,6 +197,54 @@ export function ArticleComments({
     }
   }
 
+  function handleStartEdit(comment: ArticleComment) {
+    setEditingCommentId(comment.commentId);
+    setEditingContent(comment.content);
+  }
+
+  function handleCancelEdit() {
+    setEditingCommentId(null);
+    setEditingContent("");
+  }
+
+  function handleSaveEdit(commentId: number) {
+    const normalizedContent = editingContent.trim();
+    if (!normalizedContent) {
+      toast.error("Nội dung bình luận không được để trống.");
+      return;
+    }
+
+    setComments((previous) =>
+      previous.map((item) =>
+        item.commentId === commentId
+          ? {
+              ...item,
+              content: normalizedContent,
+              updatedAt: new Date().toISOString(),
+            }
+          : item,
+      ),
+    );
+
+    handleCancelEdit();
+    toast.success("Đã cập nhật bình luận.");
+  }
+
+  function handleDelete(commentId: number) {
+    const shouldDelete = window.confirm("Bạn có chắc muốn xoá bình luận này?");
+    if (!shouldDelete) {
+      return;
+    }
+
+    setComments((previous) => previous.filter((item) => item.commentId !== commentId));
+
+    if (editingCommentId === commentId) {
+      handleCancelEdit();
+    }
+
+    toast.success("Đã xoá bình luận.");
+  }
+
   return (
     <section className="space-y-6">
       <div id="comments" className="mx-auto max-w-3xl px-4 py-6">
@@ -254,6 +304,15 @@ export function ArticleComments({
                 key={comment.commentId}
                 className="rounded-xl border border-border bg-background p-4 my-5"
               >
+                {(() => {
+                  const isOwner =
+                    isLoggedIn &&
+                    typeof currentUserId === "number" &&
+                    currentUserId === comment.userId;
+                  const isEditing = editingCommentId === comment.commentId;
+
+                  return (
+                    <>
                 <div className="mb-2 flex items-center gap-3">
                   <Avatar size="sm">
                     <AvatarFallback>
@@ -266,12 +325,68 @@ export function ArticleComments({
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {formatCreatedAt(comment.createdAt)}
+                      {comment.updatedAt ? " • Đã chỉnh sửa" : ""}
                     </p>
                   </div>
+                  {isOwner ? (
+                    <div className="ml-auto flex items-center gap-2">
+                      {isEditing ? null : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleStartEdit(comment)}
+                        >
+                          Sửa
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(comment.commentId)}
+                      >
+                        Xoá
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                  {comment.content}
-                </p>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <Textarea
+                      value={editingContent}
+                      onChange={(event) => setEditingContent(event.target.value)}
+                      rows={3}
+                      maxLength={1000}
+                    />
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCancelEdit}
+                      >
+                        Huỷ
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="bg-pink-600"
+                        onClick={() => handleSaveEdit(comment.commentId)}
+                        disabled={!editingContent.trim()}
+                      >
+                        Lưu
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                    {comment.content}
+                  </p>
+                )}
+                    </>
+                  );
+                })()}
               </article>
             ))
           )}
