@@ -8,10 +8,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-
 import Link from "next/link";
 
-export function NavMainAdmin({
+export function NavMainEditor({
   items,
 }: {
   items: {
@@ -24,15 +23,11 @@ export function NavMainAdmin({
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
-          <SidebarMenuItem className="flex items-center gap-2"></SidebarMenuItem>
-        </SidebarMenu>
-        {/* <Separator /> */}
-        <SidebarMenu>
           <SidebarGroupLabel>Tác vụ</SidebarGroupLabel>
           {items.map((item) => (
-            <Link key={item.title} href={`/admin${item.url}`}>
+            <Link key={item.title} href={`/editor${item.url}`}>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip={item.title} className="text-base">
+                <SidebarMenuButton tooltip={item.title}>
                   {item.icon}
                   {item.title}
                 </SidebarMenuButton>

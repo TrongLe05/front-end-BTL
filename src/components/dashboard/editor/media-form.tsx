@@ -214,10 +214,10 @@ export function MediaUploadForm() {
               <SelectValue placeholder="Chọn section" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="cảnh quan">Cảnh quan</SelectItem>
-              <SelectItem value="đời sống">Đời sống</SelectItem>
-              <SelectItem value="đảng">Đảng</SelectItem>
-              <SelectItem value="sự kiện">Sự kiện</SelectItem>
+              <SelectItem value="Cảnh quan">Cảnh quan</SelectItem>
+              <SelectItem value="Đời sống">Đời sống</SelectItem>
+              <SelectItem value="Đảng">Đảng</SelectItem>
+              <SelectItem value="Sự kiện">Sự kiện</SelectItem>
             </SelectContent>
           </Select>
         </div>

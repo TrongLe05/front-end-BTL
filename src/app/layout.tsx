@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-// import { GoogleAnalytics } from "@next/third-parties/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
+
+const gaId = process.env.NEXT_PUBLIC_GA_ID;
 const roboto = Roboto({
   subsets: ["latin"],
   weight: ["400", "700"],
@@ -26,8 +28,8 @@ export default function RootLayout({
       <body className={roboto.className}>
         {children}
         <Toaster />
+        {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
       </body>
-      {/* <GoogleAnalytics gaId="G-877FJRKM7J" /> */}
     </html>
   );
 }

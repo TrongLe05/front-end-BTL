@@ -11,10 +11,16 @@ import {
   CardDescription,
   CardFooter,
 } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const revalidate = 300;
+
+type TinTucPageProps = {
+  searchParams: Promise<{
+    category?: string;
+  }>;
+};
 
 function formatPublishedDate(article: Article): string {
   const rawDate = article.publishedAt || article.createdAt || article.updatedAt;
@@ -42,8 +48,33 @@ function resolveThumbnailUrl(thumbnailUrl?: string): string {
   return `${API_BASE_URL}${normalizedPath}`;
 }
 
-export default async function TinTuc() {
+export default async function TinTuc({ searchParams }: TinTucPageProps) {
+  const { category } = await searchParams;
+  const selectedCategoryId = Number(category);
+  const hasValidCategoryFilter =
+    Number.isFinite(selectedCategoryId) && selectedCategoryId > 0;
+
   const articles = (await getPublicArticles()) as Article[];
+  const categoriesWithArticles = Array.from(
+    new Map(
+      articles
+        .filter((article) => article.categoryId > 0)
+        .map((article) => [
+          article.categoryId,
+          {
+            categoryId: article.categoryId,
+            name: article.categoryName || `Danh mục ${article.categoryId}`,
+          },
+        ]),
+    ).values(),
+  );
+
+  const filteredArticles = hasValidCategoryFilter
+    ? articles.filter((article) => article.categoryId === selectedCategoryId)
+    : articles;
+  const selectedTabValue = hasValidCategoryFilter
+    ? String(selectedCategoryId)
+    : "all";
 
   return (
     <div>
@@ -79,21 +110,35 @@ export default async function TinTuc() {
       </div>
       <main className="container mx-auto mt-8 space-y-10 px-6">
         <div>
-          <Tabs defaultValue="all">
-            <TabsList variant="default">
-              <TabsTrigger value="all">Tất cả</TabsTrigger>
-              <TabsTrigger value="1">1</TabsTrigger>
-              <TabsTrigger value="2">2</TabsTrigger>
+          <Tabs value={selectedTabValue}>
+            <TabsList variant="default" className="h-auto flex-wrap gap-1 p-1">
+              <TabsTrigger value="all" asChild className="px-4">
+                <Link href="/tin-tuc">Tất cả</Link>
+              </TabsTrigger>
+
+              {categoriesWithArticles.map((item) => (
+                <TabsTrigger
+                  key={item.categoryId}
+                  value={String(item.categoryId)}
+                  asChild
+                  className="px-4"
+                >
+                  <Link href={`/tin-tuc?category=${item.categoryId}`}>
+                    {item.name}
+                  </Link>
+                </TabsTrigger>
+              ))}
             </TabsList>
           </Tabs>
         </div>
-        {articles.length === 0 ? (
+
+        {filteredArticles.length === 0 ? (
           <p className="text-center text-muted-foreground">
-            Chưa có bài viết để hiển thị.
+            Không có bài viết trong danh mục đã chọn.
           </p>
         ) : (
           <div className="grid grid-cols-3 gap-6">
-            {articles.map((article) => {
+            {filteredArticles.map((article) => {
               const thumbnailUrl = resolveThumbnailUrl(article.thumbnailUrl);
               return (
                 <Link
