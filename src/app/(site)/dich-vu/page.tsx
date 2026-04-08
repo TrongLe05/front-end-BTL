@@ -22,10 +22,10 @@ const services = [
   },
   {
     id: 3,
-    href: "/dich-vu/tai-bieu-mau",
-    title: "Tải biểu mẫu",
+    href: "/dich-vu/tra-cuu-ho-so",
+    title: "Tra cứu hồ sơ",
     description:
-      "Cung cấp các biểu mẫu cần thiết cho các thủ tục hành chính và dịch vụ công.",
+      "Người dân có thể tra cứu trạng thái và thông tin về các hồ sơ đã nộp.",
   },
 ];
 

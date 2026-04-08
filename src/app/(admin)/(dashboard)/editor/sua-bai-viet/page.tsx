@@ -5,7 +5,6 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cookies } from "next/headers";
 import {
   getCategories,
-  getArticles,
   getArticlesByAuthor,
 } from "@/lib/api/article";
 import { ArticleEditFormPage } from "@/components/dashboard/editor/article-edit-page";

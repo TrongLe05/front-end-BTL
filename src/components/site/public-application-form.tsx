@@ -1,13 +1,26 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Send, Copy, CheckCircle2 } from "lucide-react";
+import {
+  Loader2,
+  Send,
+  Copy,
+  CheckCircle2,
+  ChevronDownIcon,
+} from "lucide-react";
+import { format } from "date-fns";
 import { toast } from "sonner";
-
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
 import { submitPublicApplication } from "@/lib/api/procedure";
+import Link from "next/link";
 
 type PublicApplicationFormProps = {
   selectedProcedureId?: number;
@@ -19,11 +32,18 @@ export function PublicApplicationForm({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [submittedCode, setSubmittedCode] = React.useState<string>("");
+  const [copied, setCopied] = React.useState(false);
   const successPanelRef = React.useRef<HTMLDivElement>(null);
-
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    toast.success("Đã sao chép mã hồ sơ!");
+  const [date, setDate] = React.useState<Date>();
+  const handleCopyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      toast.success("Đã sao chép mã hồ sơ!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Không thể sao chép. Vui lòng thử lại.");
+    }
   };
 
   const handleSubmit = React.useCallback(
@@ -39,7 +59,7 @@ export function PublicApplicationForm({
       const formData = new FormData(formElement);
 
       const fullName = String(formData.get("fullName") || "").trim();
-      const birthDate = String(formData.get("birthDate") || "").trim();
+      const birthDate = date ? format(date, "yyyy-MM-dd") : "";
       const cccd = String(formData.get("cccd") || "").trim();
       const address = String(formData.get("address") || "").trim();
       const attachments = formData.getAll("attachments");
@@ -49,6 +69,11 @@ export function PublicApplicationForm({
 
       if (!fullName || !cccd || !address) {
         toast.error("Vui lòng nhập đầy đủ họ tên, CCCD/CMND và địa chỉ.");
+        return;
+      }
+
+      if (!date) {
+        toast.error("Vui lòng chọn ngày tháng năm sinh.");
         return;
       }
 
@@ -72,6 +97,7 @@ export function PublicApplicationForm({
       try {
         const result = await submitPublicApplication(formData);
         setSubmittedCode(result.applicationCode || "");
+        setCopied(false);
         setIsSubmitted(true);
         toast.success(
           result.applicationCode
@@ -79,6 +105,7 @@ export function PublicApplicationForm({
             : "Nộp hồ sơ thành công!",
         );
         formElement.reset();
+        setDate(undefined);
         // Scroll success panel into view
         setTimeout(() => {
           successPanelRef.current?.scrollIntoView({
@@ -96,7 +123,7 @@ export function PublicApplicationForm({
         setIsSubmitting(false);
       }
     },
-    [selectedProcedureId],
+    [date, selectedProcedureId],
   );
 
   return (
@@ -125,18 +152,31 @@ export function PublicApplicationForm({
                   size="sm"
                   className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
                   onClick={() => handleCopyCode(submittedCode)}
+                  aria-label="Sao chép mã hồ sơ"
                 >
-                  <Copy className="size-4" />
+                  {copied ? (
+                    <>
+                      <CheckCircle2 className="size-4" />
+                      Đã sao chép
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="size-4" />
+                      Sao chép
+                    </>
+                  )}
                 </Button>
               </div>
               <p className="text-xs text-emerald-700">
-                💡 Nhấn nút above để sao chép mã hồ sơ hoặc bạn có thể{" "}
-                <a
-                  href="#"
-                  className="font-semibold underline hover:no-underline"
-                >
-                  tra cứu trạng thái
-                </a>
+                Nhấn nút Sao chép để lưu mã hồ sơ, hoặc bạn có thể{" "}
+                <Link href="/dich-vu/tra-cuu-ho-so">
+                  <Button
+                    variant="link"
+                    className="font-semibold text-xs text-emerald-700 p-0"
+                  >
+                    tra cứu trạng thái
+                  </Button>
+                </Link>
               </p>
             </>
           ) : (
@@ -153,6 +193,7 @@ export function PublicApplicationForm({
             onClick={() => {
               setIsSubmitted(false);
               setSubmittedCode("");
+              setCopied(false);
             }}
           >
             ← Nộp hồ sơ khác
@@ -160,7 +201,7 @@ export function PublicApplicationForm({
         </div>
       )}
 
-      <form className="space-y-5" onSubmit={handleSubmit}>
+      <form className="space-y-5 pb-3" onSubmit={handleSubmit}>
         <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
           Trường có dấu * là bắt buộc. Vui lòng đính kèm đúng tệp hồ sơ để hệ
           thống tiếp nhận.
@@ -180,9 +221,36 @@ export function PublicApplicationForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="birthDate" className="font-medium text-slate-700">
-              Ngày tháng năm sinh
+              Ngày tháng năm sinh *
             </Label>
-            <Input id="birthDate" name="birthDate" type="date" />
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="birthDate"
+                  type="button"
+                  variant="outline"
+                  data-empty={!date}
+                  className="w-full justify-between text-left font-normal data-[empty=true]:text-muted-foreground"
+                >
+                  {date ? (
+                    format(date, "PPP")
+                  ) : (
+                    <span>Chọn ngày, tháng, năm sinh</span>
+                  )}
+                  <ChevronDownIcon />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  captionLayout="dropdown"
+                  defaultMonth={date}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 

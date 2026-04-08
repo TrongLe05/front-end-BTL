@@ -179,13 +179,13 @@ export function PublicApplicationSubmitPage() {
         </div>
       ) : null}
 
-      <Card className="overflow-hidden border-slate-200 py-0">
+      <Card className="overflow-hidden border-slate-200 ">
         <CardHeader className="border-b bg-slate-50">
           <CardTitle className="text-lg font-semibold text-slate-900">
             Thông tin thủ tục
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pb-5">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <p className="text-sm font-semibold text-slate-700">Lĩnh vực</p>
@@ -321,7 +321,7 @@ export function PublicApplicationSubmitPage() {
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden border-slate-200 py-0">
+      <Card className="overflow-hidden border-slate-200">
         <CardHeader className="border-b bg-slate-50">
           <CardTitle className="text-lg font-semibold text-slate-900">
             Biểu mẫu nộp hồ sơ
