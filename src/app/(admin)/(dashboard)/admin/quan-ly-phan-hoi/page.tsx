@@ -1,9 +1,7 @@
+import { FeedbackTable } from "@/components/dashboard/admin/feedback-table";
 import { SidebarAdmin } from "@/components/dashboard/admin/sidebar-admin";
 import { SiteHeaderAdmin } from "@/components/dashboard/admin/site-header-admin";
-import { AdminAnalyticsDashboard } from "@/components/dashboard/admin/admin-dashboard";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-
-// import data from "../../data.json";
 
 export default function Page() {
   return (
@@ -17,13 +15,11 @@ export default function Page() {
     >
       <SidebarAdmin variant="inset" />
       <SidebarInset>
-        <SiteHeaderAdmin />
+        <SiteHeaderAdmin title="Quản lý dịch vụ" />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-              <div className="px-4 lg:px-6">
-                <AdminAnalyticsDashboard />
-              </div>
+              <FeedbackTable />
             </div>
           </div>
         </div>

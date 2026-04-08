@@ -13,6 +13,8 @@ import {
   ArticleComment,
   createComment,
   getCommentsByArticle,
+  updateComment,
+  deleteComment,
 } from "@/lib/api/comment";
 
 type ArticleCommentsProps = {
@@ -82,7 +84,7 @@ export function ArticleComments({
 
   const { isLoggedIn, currentUserId, currentUserName } = authState;
 
-  useEffect(() => {
+  function updateAuthState() {
     const authProfile = getAuthProfile();
     const userId = getCurrentUserId();
     const loggedIn = typeof userId === "number" && userId > 0;
@@ -92,6 +94,26 @@ export function ArticleComments({
       currentUserId: loggedIn ? userId : null,
       currentUserName: authProfile?.fullName?.trim() || "Bạn",
     });
+  }
+
+  useEffect(() => {
+    updateAuthState();
+
+    const handleStorageChange = () => {
+      updateAuthState();
+    };
+
+    const handleAuthStateChanged = () => {
+      updateAuthState();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("authStateChanged", handleAuthStateChanged);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("authStateChanged", handleAuthStateChanged);
+    };
   }, []);
 
   useEffect(() => {
@@ -207,44 +229,64 @@ export function ArticleComments({
     setEditingContent("");
   }
 
-  function handleSaveEdit(commentId: number) {
+  async function handleSaveEdit(commentId: number) {
     const normalizedContent = editingContent.trim();
     if (!normalizedContent) {
       toast.error("Nội dung bình luận không được để trống.");
       return;
     }
 
-    setComments((previous) =>
-      previous.map((item) =>
-        item.commentId === commentId
-          ? {
-              ...item,
-              content: normalizedContent,
-              updatedAt: new Date().toISOString(),
-            }
-          : item,
-      ),
-    );
+    try {
+      await updateComment(commentId, normalizedContent);
 
-    handleCancelEdit();
-    toast.success("Đã cập nhật bình luận.");
+      setComments((previous) =>
+        previous.map((item) =>
+          item.commentId === commentId
+            ? {
+                ...item,
+                content: normalizedContent,
+                updatedAt: new Date().toISOString(),
+              }
+            : item,
+        ),
+      );
+
+      handleCancelEdit();
+      toast.success("Đã cập nhật bình luận.");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Không thể cập nhật bình luận. Vui lòng thử lại.";
+      toast.error(message);
+    }
   }
 
-  function handleDelete(commentId: number) {
+  async function handleDelete(commentId: number) {
     const shouldDelete = window.confirm("Bạn có chắc muốn xoá bình luận này?");
     if (!shouldDelete) {
       return;
     }
 
-    setComments((previous) =>
-      previous.filter((item) => item.commentId !== commentId),
-    );
+    try {
+      await deleteComment(commentId);
 
-    if (editingCommentId === commentId) {
-      handleCancelEdit();
+      setComments((previous) =>
+        previous.filter((item) => item.commentId !== commentId),
+      );
+
+      if (editingCommentId === commentId) {
+        handleCancelEdit();
+      }
+
+      toast.success("Đã xoá bình luận.");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Không thể xóa bình luận. Vui lòng thử lại.";
+      toast.error(message);
     }
-
-    toast.success("Đã xoá bình luận.");
   }
 
   return (

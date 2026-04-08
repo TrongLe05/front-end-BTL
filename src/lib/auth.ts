@@ -144,6 +144,12 @@ export function setAuthSession(input: AuthSessionInput): void {
 
   setCookieValue(TOKEN_COOKIE, input.token);
   setCookieValue(ROLE_COOKIE, role);
+
+  window.dispatchEvent(
+    new CustomEvent("authStateChanged", {
+      detail: { userId: input.userId, fullName: input.fullName },
+    }),
+  );
 }
 
 export function getAuthSnapshot(): AuthSnapshot {
@@ -290,4 +296,6 @@ export function clearAuthSession(): void {
 
   clearCookieValue(TOKEN_COOKIE);
   clearCookieValue(ROLE_COOKIE);
+
+  window.dispatchEvent(new CustomEvent("authStateChanged", { detail: {} }));
 }

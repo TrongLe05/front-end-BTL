@@ -63,8 +63,18 @@ const data = {
       icon: <FolderTree />,
     },
     {
-      title: "Quản lý dịch vụ",
-      url: "/quan-ly-dich-vu",
+      title: "Quản lý phản ánh",
+      url: "/quan-ly-phan-hoi",
+      icon: <Briefcase />,
+    },
+    {
+      title: "Quản lý hồ sơ",
+      url: "/quan-ly-ho-so",
+      icon: <Briefcase />,
+    },
+    {
+      title: "Quản lý lĩnh vực, thủ tục",
+      url: "/quan-ly-linhvuc-thutuc",
       icon: <Briefcase />,
     },
   ],
