@@ -110,6 +110,77 @@ export default async function Home() {
       ) : null}
 
       <main className="container mx-auto mt-8 space-y-10 px-6">
+        <section aria-labelledby="tin-tuc-noi-bat" className="grid gap-6 ">
+          <Card className="">
+            <CardHeader>
+              <CardTitle>
+                <h2 className="text-2xl font-semibold tracking-tight">
+                  Tin tức nổi bật
+                </h2>
+                <p className="mt-2 text-muted-foreground">
+                  Các cập nhật mới nhất về hoạt động và thông báo tại địa
+                  phương.
+                </p>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-5">
+                {featuredNews.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Chưa có tin tức để hiển thị.
+                  </p>
+                ) : (
+                  featuredNews.map((news) => (
+                    <Card
+                      key={news.articleId}
+                      className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                    >
+                      <CardHeader>
+                        <p className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                          <CalendarDays className="size-3.5" />
+                          {formatDate(
+                            news.publishedAt ||
+                              news.createdAt ||
+                              news.updatedAt,
+                          )}
+                        </p>
+                        <CardTitle className="text-base leading-snug line-clamp-2 min-h-[3rem]">
+                          <Link
+                            href={`/tin-tuc/${news.articleId}`}
+                            className="hover:text-pink-600 transition-colors duration-100"
+                          >
+                            {news.title}
+                          </Link>
+                        </CardTitle>
+                        <p className="text-muted-foreground line-clamp-3">
+                          {news.summary || "Đang cập nhật nội dung tóm tắt."}
+                        </p>
+                      </CardHeader>
+                      <CardContent className=" flex flex-col flex-1">
+                        {resolveThumbnailUrl(news.thumbnailUrl) ? (
+                          <Link
+                            href={`/tin-tuc/${news.articleId}`}
+                            className=""
+                          >
+                            <Image
+                              src={resolveThumbnailUrl(news.thumbnailUrl)}
+                              alt={news.title}
+                              width={720}
+                              height={405}
+                              className="mb-3 w-full h-40 object-cover rounded-md"
+                              unoptimized
+                            />
+                          </Link>
+                        ) : null}
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         <section aria-labelledby="tong-quan" className="grid gap-6">
           <Card className="overflow-hidden">
             <CardHeader className="pb-0">
@@ -232,76 +303,7 @@ export default async function Home() {
             </CardContent>
           </Card>
         </section>
-        <section aria-labelledby="tin-tuc-noi-bat" className="grid gap-6 ">
-          <Card className="">
-            <CardHeader>
-              <CardTitle>
-                <h2 className="text-2xl font-semibold tracking-tight">
-                  Tin tức nổi bật
-                </h2>
-                <p className="mt-2 text-muted-foreground">
-                  Các cập nhật mới nhất về hoạt động và thông báo tại địa
-                  phương.
-                </p>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-5">
-                {featuredNews.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Chưa có tin tức để hiển thị.
-                  </p>
-                ) : (
-                  featuredNews.map((news) => (
-                    <Card
-                      key={news.articleId}
-                      className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-                    >
-                      <CardHeader>
-                        <p className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-                          <CalendarDays className="size-3.5" />
-                          {formatDate(
-                            news.publishedAt ||
-                              news.createdAt ||
-                              news.updatedAt,
-                          )}
-                        </p>
-                        <CardTitle className="text-base leading-snug line-clamp-2 min-h-[3rem]">
-                          <Link
-                            href={`/tin-tuc/${news.articleId}`}
-                            className="hover:text-pink-600 transition-colors duration-100"
-                          >
-                            {news.title}
-                          </Link>
-                        </CardTitle>
-                        <p className="text-muted-foreground line-clamp-3">
-                          {news.summary || "Đang cập nhật nội dung tóm tắt."}
-                        </p>
-                      </CardHeader>
-                      <CardContent className=" flex flex-col flex-1">
-                        {resolveThumbnailUrl(news.thumbnailUrl) ? (
-                          <Link
-                            href={`/tin-tuc/${news.articleId}`}
-                            className=""
-                          >
-                            <Image
-                              src={resolveThumbnailUrl(news.thumbnailUrl)}
-                              alt={news.title}
-                              width={720}
-                              height={405}
-                              className="mb-3 w-full h-40 object-cover rounded-md"
-                              unoptimized
-                            />
-                          </Link>
-                        ) : null}
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+
         <section
           aria-labelledby="dich-vu-va-tin-tuc"
           className="grid gap-6 lg:grid-cols-5"
