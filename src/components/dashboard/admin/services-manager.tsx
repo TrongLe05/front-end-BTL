@@ -54,6 +54,17 @@ type AdminField = {
   childCount?: number;
 };
 
+type AdminFieldResponse = {
+  serviceCategoryId?: number;
+  categoryCode?: string;
+  name?: string;
+  fieldName?: string;
+  description?: string;
+  status?: number;
+  procedureCount?: number;
+  childCount?: number;
+};
+
 // Thủ Tục
 type AdminProcedure = {
   serviceId?: number;
@@ -96,19 +107,50 @@ export default function QuanLyThuTuc() {
     return [];
   };
 
+  const normalizeField = useCallback((item: AdminFieldResponse): AdminField => {
+    const serviceCategoryId =
+      typeof item.serviceCategoryId === "number"
+        ? item.serviceCategoryId
+        : undefined;
+
+    return {
+      serviceCategoryId,
+      categoryCode: item.categoryCode ?? "",
+      name: item.name ?? item.fieldName ?? "",
+      description: item.description,
+      status: typeof item.status === "number" ? item.status : 1,
+      childCount:
+        typeof item.childCount === "number"
+          ? item.childCount
+          : (item.procedureCount ?? 0),
+    };
+  }, []);
+
+  const normalizeFields = useCallback(
+    (res: unknown): AdminField[] =>
+      toArray<AdminFieldResponse>(res)
+        .map(normalizeField)
+        .filter(
+          (item) =>
+            typeof item.serviceCategoryId === "number" &&
+            item.name.trim().length > 0,
+        ),
+    [normalizeField],
+  );
+
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
       if (activeTab === "fields") {
         const res = await fetchAdminFields();
-        setFields(toArray<AdminField>(res));
+        setFields(normalizeFields(res));
       } else {
         const res = await fetchAdminProcedures();
         setProcedures(toArray<AdminProcedure>(res));
 
         if (fields.length === 0) {
           const catRes = await fetchAdminFields();
-          setFields(toArray<AdminField>(catRes));
+          setFields(normalizeFields(catRes));
         }
       }
     } catch (error) {
@@ -117,7 +159,7 @@ export default function QuanLyThuTuc() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab, fields.length]);
+  }, [activeTab, fields.length, normalizeFields]);
 
   useEffect(() => {
     void loadData();
@@ -136,16 +178,47 @@ export default function QuanLyThuTuc() {
           description: currentField.description,
         });
         toast.success("Cập nhật lĩnh vực thành công!");
+        void loadData();
       } else {
-        await createAdminField({
+        const result = (await createAdminField({
           name: currentField.name,
           categoryCode: currentField.categoryCode,
           description: currentField.description,
+        })) as { Field?: AdminFieldResponse; field?: AdminFieldResponse };
+
+        const createdFieldRaw = result?.Field ?? result?.field;
+        const createdField = createdFieldRaw
+          ? normalizeField(createdFieldRaw)
+          : {
+              serviceCategoryId: undefined,
+              categoryCode: currentField.categoryCode,
+              name: currentField.name,
+              description: currentField.description,
+              status: 1,
+              childCount: 0,
+            };
+
+        setFields((prev) => {
+          if (createdField.serviceCategoryId == null) {
+            return prev;
+          }
+
+          const existedIndex = prev.findIndex(
+            (item) => item.serviceCategoryId === createdField.serviceCategoryId,
+          );
+
+          if (existedIndex >= 0) {
+            const next = [...prev];
+            next[existedIndex] = { ...next[existedIndex], ...createdField };
+            return next;
+          }
+
+          return [...prev, createdField];
         });
+
         toast.success("Thêm lĩnh vực thành công!");
       }
       setIsFieldSheetOpen(false);
-      loadData();
     } catch {
       toast.error("Lỗi lưu lĩnh vực");
     }

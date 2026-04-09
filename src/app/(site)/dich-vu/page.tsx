@@ -1,10 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ClipboardList, FileText, Handshake } from "lucide-react";
+import { ClipboardList, FileText, Handshake, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+
 const services = [
   {
     id: 1,
@@ -34,62 +35,81 @@ export default function DichVu() {
 
   return (
     <div>
-      <div className="relative overflow-hidden border-b bg-amber-50/70">
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          <Handshake className="absolute left-5 top-4 size-9 -rotate-12 text-amber-300/60 md:size-12" />
-          <ClipboardList className="absolute right-6 top-6 size-8 rotate-12 text-emerald-300/60 md:size-11" />
-          <FileText className="absolute bottom-3 left-[16%] size-8 rotate-6 text-cyan-300/50 md:size-10" />
-          <Handshake className="absolute bottom-2 right-[14%] size-9 -rotate-6 text-amber-300/50 md:size-11" />
+      {/* HERO */}
+      <div className="relative overflow-hidden border-b bg-linear-to-br from-amber-50 via-white to-slate-100">
+        {/* floating icons */}
+        <div className="pointer-events-none absolute inset-0">
+          <Handshake className="absolute left-5 top-4 size-10 -rotate-12 text-amber-300/60" />
+          <ClipboardList className="absolute right-6 top-6 size-9 rotate-12 text-emerald-300/60" />
+          <FileText className="absolute bottom-4 left-[16%] size-9 rotate-6 text-cyan-300/50" />
         </div>
 
-        <div className="container relative mx-auto space-y-3 p-5 text-center">
-          <Badge
-            variant="secondary"
-            className="h-7 rounded-full border border-amber-200 bg-white px-4 text-amber-700"
-          >
+        {/* glow */}
+        <div className="absolute -top-16 -right-16 h-40 w-40 bg-amber-200 blur-3xl opacity-30" />
+
+        <div className="container relative mx-auto space-y-4 p-6 text-center">
+          <Badge className="rounded-full border border-amber-200 bg-white px-4 py-1 text-amber-700 shadow-sm">
             Dịch vụ công trực tuyến
           </Badge>
+
           <h1 className="text-3xl font-black tracking-tight text-slate-900 md:text-4xl">
-            Dịch vụ
+            Dịch vụ dành cho người dân
           </h1>
+
           <p className="mx-auto max-w-2xl text-sm text-slate-600 md:text-base">
-            Tra cứu thủ tục hành chính, nộp hồ sơ và tải biểu mẫu nhanh chóng
-            cho người dân tại phường Cao Lãnh.
+            Tra cứu thủ tục, nộp hồ sơ và theo dõi trạng thái nhanh chóng trong
+            vài bước đơn giản.
           </p>
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-semibold text-slate-700">
+
+          <div className="inline-flex items-center gap-2 rounded-full border bg-white px-4 py-1.5 text-xs font-semibold shadow-sm">
             <ClipboardList className="size-4" />
             {services.length} nhóm dịch vụ
           </div>
         </div>
       </div>
 
-      <section className="container mx-auto px-4 py-10">
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((service) => (
-              <Card key={service.id}>
-                <CardHeader>
-                  <h2 className="text-xl inline-flex font-semibold leading-snug line-clamp-2">
+      {/* SERVICES */}
+      <section className="container mx-auto px-4 py-12">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {services.map((service, index) => (
+            <Card
+              key={service.id}
+              className="group relative flex h-full flex-col overflow-hidden rounded-2xl border bg-white p-0 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+            >
+              {/* hover gradient */}
+              <div className="absolute inset-0 bg-linear-to-br from-blue-50 to-transparent opacity-0 transition group-hover:opacity-100" />
+
+              <CardHeader className="relative flex flex-1 flex-col space-y-3 p-5">
+                {/* icon */}
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl bg-blue-100 p-2 text-blue-600 shadow-sm group-hover:bg-blue-600 group-hover:text-white transition">
+                    {index === 0 && <ClipboardList size={18} />}
+                    {index === 1 && <Handshake size={18} />}
+                    {index === 2 && <FileText size={18} />}
+                  </div>
+
+                  <h2 className="text-lg font-semibold text-slate-900">
                     {service.title}
                   </h2>
-                  <CardTitle className="text-base text-muted-foreground leading-snug line-clamp-2">
-                    {service.description}
-                  </CardTitle>
-                </CardHeader>
-                <CardFooter>
-                  <Button
-                    variant="outline"
-                    className="w-full hover:bg-pink-600 hover:text-white transition-colors duration-400"
-                    onClick={() => {
-                      router.push(service.href);
-                    }}
-                  >
-                    Tìm hiểu thêm
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+                </div>
+
+                <p className="min-h-14 text-sm leading-relaxed text-slate-600">
+                  {service.description}
+                </p>
+              </CardHeader>
+
+              <CardFooter className="relative mt-auto">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-between border border-slate-200 bg-white hover:bg-blue-600 hover:text-white transition-all"
+                  onClick={() => router.push(service.href)}
+                >
+                  Tìm hiểu thêm
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
         </div>
       </section>
     </div>

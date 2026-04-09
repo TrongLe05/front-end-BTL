@@ -21,16 +21,12 @@ import {
   trackPublicApplication,
   type TrackedApplication,
 } from "@/lib/api/procedure";
+import { getDocumentViewerUrl } from "@/lib/utils/document-viewer";
 
 function formatDate(dateValue: string | null) {
-  if (!dateValue) {
-    return "-";
-  }
-
+  if (!dateValue) return "-";
   const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
+  if (Number.isNaN(date.getTime())) return "-";
 
   return new Intl.DateTimeFormat("vi-VN", {
     day: "2-digit",
@@ -41,33 +37,52 @@ function formatDate(dateValue: string | null) {
   }).format(date);
 }
 
+function formatDateOnly(dateValue: string | null) {
+  if (!dateValue) return "-";
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+}
+
+function normalizeApplicationCode(value: string) {
+  return value.replace(/\s+/g, "").toUpperCase();
+}
+
 function getStatusStyle(status: string) {
+  const base =
+    "border px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1";
+
   const normalizedStatus = status.toLowerCase();
 
   if (normalizedStatus === "approved") {
     return {
       icon: CheckCircle2,
-      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      className: base + " bg-emerald-50 text-emerald-700 border-emerald-200",
     };
   }
 
   if (normalizedStatus === "rejected") {
     return {
       icon: XCircle,
-      className: "border-rose-200 bg-rose-50 text-rose-700",
+      className: base + " bg-rose-50 text-rose-700 border-rose-200",
     };
   }
 
   if (normalizedStatus === "processing") {
     return {
       icon: Clock3,
-      className: "border-amber-200 bg-amber-50 text-amber-700",
+      className: base + " bg-amber-50 text-amber-700 border-amber-200",
     };
   }
 
   return {
     icon: Clock3,
-    className: "border-slate-200 bg-slate-100 text-slate-700",
+    className: base + " bg-slate-100 text-slate-700 border-slate-200",
   };
 }
 
@@ -77,204 +92,201 @@ export function PublicApplicationTrackPage() {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [result, setResult] = React.useState<TrackedApplication | null>(null);
   const [isNotFound, setIsNotFound] = React.useState(false);
+  const [submittedCode, setSubmittedCode] = React.useState<string>("");
 
-  const handleSearch = React.useCallback(
-    async (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
+  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = normalizeApplicationCode(e.target.value);
+    setApplicationCode(value);
+    setErrorMessage(null);
+    setIsNotFound(false);
+  };
 
-      const normalizedCode = applicationCode.trim();
-      if (!normalizedCode) {
-        setErrorMessage("Vui lòng nhập mã hồ sơ để tra cứu.");
-        setResult(null);
-        setIsNotFound(false);
+  const handleClear = () => {
+    setApplicationCode("");
+    setSubmittedCode("");
+    setErrorMessage(null);
+    setResult(null);
+    setIsNotFound(false);
+  };
+
+  const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const code = normalizeApplicationCode(applicationCode);
+
+    if (!code) {
+      setErrorMessage("Vui lòng nhập mã hồ sơ.");
+      return;
+    }
+
+    if (code.length < 8) {
+      setErrorMessage("Mã hồ sơ không hợp lệ.");
+      return;
+    }
+
+    setIsSearching(true);
+    setErrorMessage(null);
+    setResult(null);
+    setIsNotFound(false);
+    setSubmittedCode(code);
+
+    try {
+      const res = await trackPublicApplication(code);
+      if (!res) {
+        setIsNotFound(true);
         return;
       }
-
-      setIsSearching(true);
-      setErrorMessage(null);
-      setResult(null);
-      setIsNotFound(false);
-
-      try {
-        const trackedApplication = await trackPublicApplication(normalizedCode);
-
-        if (!trackedApplication) {
-          setIsNotFound(true);
-          return;
-        }
-
-        setResult(trackedApplication);
-      } catch (error) {
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Không thể tra cứu hồ sơ. Vui lòng thử lại.",
-        );
-      } finally {
-        setIsSearching(false);
-      }
-    },
-    [applicationCode],
-  );
+      setResult(res);
+    } catch {
+      setErrorMessage("Không thể tra cứu. Thử lại sau.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const statusStyle = result ? getStatusStyle(result.status) : null;
 
   return (
-    <main className="container mx-auto space-y-6 px-4 py-10">
+    <main className="container mx-auto max-w-5xl space-y-8 px-4 py-12">
+      {/* BACK */}
       <Button asChild variant="ghost" size="sm" className="w-fit px-0">
         <Link href="/dich-vu">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Quay lại trang Dịch vụ
+          Quay lại
         </Link>
       </Button>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <Badge
-          variant="secondary"
-          className="mb-3 rounded-full border border-blue-200 bg-blue-50 text-blue-700"
-        >
-          PublicApplications API
-        </Badge>
-        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
+      {/* HEADER */}
+      <section className="rounded-3xl border bg-linear-to-br from-white via-slate-50 to-slate-100 p-8 shadow-sm">
+        <h1 className="text-3xl font-bold text-slate-900 md:text-4xl">
           Tra cứu hồ sơ
         </h1>
-        <p className="mt-3 max-w-3xl text-sm text-slate-600 md:text-base">
-          Nhập mã hồ sơ được cấp khi nộp online để xem tình trạng xử lý hồ sơ.
+        <p className="mt-3 text-slate-600">
+          Nhập mã hồ sơ để kiểm tra trạng thái xử lý.
         </p>
       </section>
 
-      <Card className="overflow-hidden border-slate-200 py-0">
-        <CardHeader className="border-b bg-slate-50">
-          <CardTitle className="text-lg font-semibold text-slate-900">
-            Tìm kiếm hồ sơ
-          </CardTitle>
+      {/* SEARCH */}
+      <Card className="rounded-2xl shadow-sm hover:shadow-md transition">
+        <CardHeader className="border-b bg-slate-50/80 backdrop-blur">
+          <CardTitle>Tìm kiếm hồ sơ</CardTitle>
         </CardHeader>
+
         <CardContent>
           <form onSubmit={handleSearch} className="space-y-4">
-            <div className="space-y-2">
-              <Label
-                htmlFor="applicationCode"
-                className="font-medium text-slate-700"
-              >
-                Mã hồ sơ
-              </Label>
+            <div>
+              <Label>Mã hồ sơ</Label>
               <Input
-                id="applicationCode"
                 value={applicationCode}
-                onChange={(event) => setApplicationCode(event.target.value)}
-                placeholder="VD: HS-2026-0001"
-                autoComplete="off"
+                onChange={handleCodeChange}
+                placeholder="HS-2026-0001"
+                className="font-mono tracking-wider focus:ring-2 focus:ring-blue-100"
               />
             </div>
 
-            <Button
-              type="submit"
-              disabled={isSearching}
-              className="w-full bg-[#0f5fc6] text-white hover:bg-[#0c4ea2] md:w-auto"
-            >
-              {isSearching ? (
-                <Loader2 className="mr-2 size-4 animate-spin" />
-              ) : (
-                <Search className="mr-2 size-4" />
-              )}
-              Tra cứu
-            </Button>
+            <div className="flex gap-2 flex-col sm:flex-row">
+              <Button
+                type="submit"
+                disabled={isSearching}
+                className="bg-linear-to-r from-blue-600 to-blue-500 text-white"
+              >
+                {isSearching ? (
+                  <Loader2 className="animate-spin mr-2 size-4" />
+                ) : (
+                  <Search className="mr-2 size-4" />
+                )}
+                Tra cứu
+              </Button>
+
+              <Button variant="outline" onClick={handleClear}>
+                Xóa
+              </Button>
+            </div>
           </form>
 
-          {errorMessage ? (
-            <div className="mt-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <p>{errorMessage}</p>
+          {errorMessage && (
+            <div className="mt-4 flex gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-red-700">
+              <AlertCircle size={16} />
+              {errorMessage}
             </div>
-          ) : null}
+          )}
 
-          {isNotFound ? (
-            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-              Không tìm thấy hồ sơ theo mã bạn vừa nhập. Vui lòng kiểm tra lại.
+          {isNotFound && (
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-700">
+              Không tìm thấy: <strong>{submittedCode}</strong>
             </div>
-          ) : null}
+          )}
         </CardContent>
       </Card>
 
-      {result && statusStyle ? (
-        <Card className="overflow-hidden border-slate-200 py-0">
+      {/* RESULT */}
+      {result && statusStyle && (
+        <Card className="rounded-2xl shadow-sm animate-in fade-in zoom-in-95">
           <CardHeader className="border-b bg-slate-50">
-            <CardTitle className="text-lg font-semibold text-slate-900">
-              Kết quả tra cứu
-            </CardTitle>
+            <CardTitle>Kết quả</CardTitle>
           </CardHeader>
+
           <CardContent className="space-y-5">
-            <div>
-              <Badge className={statusStyle.className}>
-                <statusStyle.icon className="mr-1 size-4" />
-                {result.statusText || "Chưa xác định"}
-              </Badge>
-            </div>
+            <Badge className={statusStyle.className}>
+              <statusStyle.icon size={16} />
+              {result.statusText}
+            </Badge>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">
-                  Mã hồ sơ
-                </p>
-                <p className="mt-1 font-mono text-base font-semibold text-slate-900">
-                  {result.applicationCode}
-                </p>
-              </div>
-              <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">
-                  Ngày nộp
-                </p>
-                <p className="mt-1 text-base font-semibold text-slate-900">
-                  {formatDate(result.createdAt)}
-                </p>
-              </div>
-              <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">
-                  Người nộp
-                </p>
-                <p className="mt-1 text-base font-semibold text-slate-900">
-                  {result.applicantName || "-"}
-                </p>
-              </div>
-              <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">
-                  CCCD/CMND
-                </p>
-                <p className="mt-1 text-base font-semibold text-slate-900">
-                  {result.identityNumber || "-"}
-                </p>
-              </div>
+              <Info label="Mã hồ sơ" value={result.applicationCode} mono />
+              <Info label="Ngày nộp" value={formatDate(result.createdAt)} />
+              <Info label="Người nộp" value={result.applicantName} />
+              <Info label="CCCD" value={result.identityNumber} />
+              <Info
+                label="Ngày sinh"
+                value={formatDateOnly(result.dateOfBirth)}
+              />
             </div>
 
-            <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-semibold text-slate-800">
-                Thông tin thủ tục
+            <div className="rounded-xl bg-slate-50 p-5 space-y-2">
+              <p>
+                <strong>Lĩnh vực:</strong> {result.categoryName}
               </p>
-              <p className="text-sm text-slate-700">
-                Lĩnh vực: <strong>{result.categoryName || "-"}</strong>
+              <p>
+                <strong>Thủ tục:</strong> {result.serviceName}
               </p>
-              <p className="text-sm text-slate-700">
-                Thủ tục: <strong>{result.serviceName || "-"}</strong>
-              </p>
-              <p className="text-sm text-slate-700">
-                Địa chỉ: <strong>{result.address || "-"}</strong>
+              <p>
+                <strong>Địa chỉ:</strong> {result.address}
               </p>
             </div>
 
-            {result.attachedFileUrl ? (
-              <Button
-                asChild
-                variant="outline"
-                className="border-slate-300 bg-white hover:bg-slate-100"
-              >
-                <Link href={result.attachedFileUrl} target="_blank">
-                  Xem tệp hồ sơ đã nộp
+            {result.attachedFileUrl && (
+              <Button asChild variant="outline">
+                <Link
+                  href={getDocumentViewerUrl(result.attachedFileUrl)}
+                  target="_blank"
+                >
+                  Xem file
                 </Link>
               </Button>
-            ) : null}
+            )}
           </CardContent>
         </Card>
-      ) : null}
+      )}
     </main>
+  );
+}
+
+function Info({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: string | null;
+  mono?: boolean;
+}) {
+  return (
+    <div className="rounded-xl border p-4 shadow-sm">
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className={`mt-1 font-semibold ${mono ? "font-mono" : ""}`}>
+        {value || "-"}
+      </p>
+    </div>
   );
 }

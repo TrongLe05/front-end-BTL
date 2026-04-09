@@ -12,6 +12,8 @@ export type Feedback = {
 
 export type FeedbackStatus = "Chưa đọc" | "Đã đọc" | "Đã phản hồi";
 
+import { API_PREFIX } from "@/lib/api/config";
+
 type MessageResponse = {
   Message?: string;
   message?: string;
@@ -87,8 +89,10 @@ export async function getFeedbacks(params?: {
     searchParams.set("status", params.status.trim());
   }
 
-  const query = searchParams.toString();
-  const url = query ? `/api/admin/feedbacks?${query}` : "/api/admin/feedbacks";
+  const queryString = searchParams.toString();
+  const url = `${API_PREFIX}/admin/feedbacks${
+    queryString ? `?${queryString}` : ""
+  }`;
 
   const response = await fetch(url, {
     method: "GET",
@@ -113,7 +117,7 @@ export async function updateFeedbackStatus(
 ): Promise<{ message: string }> {
   const backendStatus = toBackendFeedbackStatus(status);
 
-  const response = await fetch(`/api/admin/feedbacks/${id}/status`, {
+  const response = await fetch(`${API_PREFIX}/admin/feedbacks/${id}/status`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",

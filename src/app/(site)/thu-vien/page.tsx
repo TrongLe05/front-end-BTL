@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { API_BASE_URL } from "@/lib/api/config";
 import { Camera, FolderOpen, Images } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type GalleryApiItem = {
   imageId?: number;
@@ -106,6 +107,7 @@ export default function ThuVienPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
 
   const galleryByFolder = useMemo(() => {
     const groups = new Map<string, GalleryItem[]>();
@@ -125,6 +127,17 @@ export default function ThuVienPage() {
       }))
       .sort((a, b) => a.folderName.localeCompare(b.folderName, "vi"));
   }, [gallery]);
+
+  // Set default folder khi load dữ liệu
+  useEffect(() => {
+    if (!selectedFolder && galleryByFolder.length > 0) {
+      setSelectedFolder(galleryByFolder[0].folderName);
+    }
+  }, [galleryByFolder, selectedFolder]);
+
+  const filteredGroup = useMemo(() => {
+    return galleryByFolder.find((group) => group.folderName === selectedFolder);
+  }, [galleryByFolder, selectedFolder]);
 
   useEffect(() => {
     let isMounted = true;
@@ -233,20 +246,33 @@ export default function ThuVienPage() {
         ) : null}
 
         {!isLoading && !error && gallery.length > 0 ? (
-          <div className="space-y-8">
-            {galleryByFolder.map((group) => (
-              <div key={group.folderName} className="space-y-4">
-                <div className="flex items-end justify-between border-b pb-2">
-                  <h2 className="text-xl font-bold tracking-tight text-slate-900">
-                    {group.folderName}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    {group.items.length} ảnh
-                  </p>
-                </div>
+          <Tabs
+            value={selectedFolder || ""}
+            onValueChange={setSelectedFolder}
+            className="space-y-6"
+          >
+            {/* Tab List - Scrollable for mobile */}
+            <div>
+              <TabsList>
+                {galleryByFolder.map((group) => (
+                  <TabsTrigger key={group.folderName} value={group.folderName}>
+                    <span>{group.folderName}</span>
+                    <span className="ml-2 text-xs text-slate-500">
+                      ({group.items.length})
+                    </span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
 
+            {/* Tab Content */}
+            {filteredGroup ? (
+              <TabsContent
+                value={filteredGroup.folderName}
+                className="space-y-4 mt-0"
+              >
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {group.items.map((item) => (
+                  {filteredGroup.items.map((item) => (
                     <article
                       key={item.id}
                       className="overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-lg"
@@ -283,9 +309,9 @@ export default function ThuVienPage() {
                     </article>
                   ))}
                 </div>
-              </div>
-            ))}
-          </div>
+              </TabsContent>
+            ) : null}
+          </Tabs>
         ) : null}
 
         {/* Modal hiển thị ảnh lớn */}

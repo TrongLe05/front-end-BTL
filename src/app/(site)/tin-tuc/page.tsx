@@ -12,7 +12,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { NewsCategorySelect } from "@/components/site/news-category-select";
 
 export const revalidate = 300;
 
@@ -72,7 +72,7 @@ export default async function TinTuc({ searchParams }: TinTucPageProps) {
   const filteredArticles = hasValidCategoryFilter
     ? articles.filter((article) => article.categoryId === selectedCategoryId)
     : articles;
-  const selectedTabValue = hasValidCategoryFilter
+  const selectedCategoryValue = hasValidCategoryFilter
     ? String(selectedCategoryId)
     : "all";
 
@@ -110,26 +110,10 @@ export default async function TinTuc({ searchParams }: TinTucPageProps) {
       </div>
       <main className="container mx-auto mt-8 space-y-10 px-6">
         <div>
-          <Tabs value={selectedTabValue}>
-            <TabsList variant="default" className="h-auto flex-wrap gap-1 p-1">
-              <TabsTrigger value="all" asChild className="px-4">
-                <Link href="/tin-tuc">Tất cả</Link>
-              </TabsTrigger>
-
-              {categoriesWithArticles.map((item) => (
-                <TabsTrigger
-                  key={item.categoryId}
-                  value={String(item.categoryId)}
-                  asChild
-                  className="px-4"
-                >
-                  <Link href={`/tin-tuc?category=${item.categoryId}`}>
-                    {item.name}
-                  </Link>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+          <NewsCategorySelect
+            categories={categoriesWithArticles}
+            selectedValue={selectedCategoryValue}
+          />
         </div>
 
         {filteredArticles.length === 0 ? (
