@@ -98,7 +98,7 @@ const columns: ColumnDef<ProcedureByField>[] = [
             size="sm"
             className="bg-blue-600 text-white hover:bg-blue-700 transition-all"
           >
-            <a href={getDocumentViewerUrl(url)} target="_blank" download>
+            <a href={url} target="_blank" download>
               <Download className="mr-1 h-4 w-4" />
               Tải
             </a>

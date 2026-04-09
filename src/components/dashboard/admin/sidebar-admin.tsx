@@ -26,12 +26,10 @@ import {
   FolderTree,
   DatabaseIcon,
   FileChartColumnIcon,
-  FileIcon,
+  FileInput,
   ArrowLeft,
   Briefcase,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 
@@ -70,7 +68,7 @@ const data = {
     {
       title: "Quản lý hồ sơ",
       url: "/quan-ly-ho-so",
-      icon: <Briefcase />,
+      icon: <FileInput />,
     },
     {
       title: "Quản lý lĩnh vực, thủ tục",

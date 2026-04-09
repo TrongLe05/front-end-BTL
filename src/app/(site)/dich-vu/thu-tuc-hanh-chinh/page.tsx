@@ -69,7 +69,6 @@ export default async function Page() {
       <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100 p-8 shadow-sm">
         {/* glow */}
         <div className="absolute -top-10 -right-10 h-40 w-40 bg-blue-200/40 blur-3xl" />
-
         <div className="relative z-10 space-y-3">
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
             Thủ tục hành chính

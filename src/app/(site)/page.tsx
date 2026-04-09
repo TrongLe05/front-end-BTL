@@ -5,8 +5,8 @@ import {
   CalendarDays,
   ArrowRight,
   FileText,
-  Landmark,
-  Briefcase,
+  Send,
+  Search,
   Compass,
 } from "lucide-react";
 import Link from "next/link";
@@ -50,25 +50,23 @@ function resolveThumbnailUrl(thumbnailUrl?: string): string {
 
 const serviceLinks = [
   {
-    title: "Dịch vụ hành chính",
-    href: "/dich-vu",
-    description:
-      "Tra cứu thủ tục, hồ sơ và quy trình giải quyết hồ sơ trực tuyến.",
+    title: "Thủ tục hành chính",
+    href: "/dich-vu/thu-tuc-hanh-chinh",
+    description: "Cung cấp thông tin và hướng dẫn về các thủ tục hành chính.",
     icon: FileText,
   },
   {
-    title: "Thông tin quy hoạch",
-    href: "/gioi-thieu",
-    description:
-      "Xem định hướng phát triển đô thị và các dự án hạ tầng trọng điểm.",
-    icon: Landmark,
+    title: "Nộp hồ sơ trực tuyến",
+    href: "/dich-vu/nop-ho-so-truc-tuyen",
+    description: "Nộp hồ sơ thủ tục hành chính trực tuyến.",
+    icon: Send,
   },
   {
-    title: "Hỗ trợ doanh nghiệp",
-    href: "/lien-he",
+    title: "Tra cứu hồ sơ",
+    href: "/dich-vu/tra-cuu-ho-so",
     description:
-      "Kênh tiếp nhận đề xuất, phản ánh và tư vấn cho hộ kinh doanh, doanh nghiệp.",
-    icon: Briefcase,
+      "Người dân có thể tra cứu trạng thái và thông tin về các hồ sơ đã nộp.",
+    icon: Search,
   },
 ];
 
@@ -227,9 +225,9 @@ export default async function Home() {
                   referrerPolicy="no-referrer-when-downgrade"
                   title="Bản đồ Phường Cao Lãnh"
                 />
-                <div className="absolute bottom-3 left-3 lg:left-9 bg-background/90 backdrop-blur-sm border border-border rounded-md px-2.5 py-1.5 text-xs font-medium pointer-events-none">
+                {/* <div className="absolute bottom-3 left-3 lg:left-9 bg-background/90 backdrop-blur-sm border border-border rounded-md px-2.5 py-1.5 text-xs font-medium pointer-events-none">
                   Cao Lãnh · Đồng Tháp
-                </div>
+                </div> */}
               </div>
             </CardContent>
           </Card>

@@ -19,8 +19,10 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
+  SheetClose,
 } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import {
@@ -247,23 +249,21 @@ export default function QuanLyThuTuc() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (
-      field === "procedureFile" &&
-      file.type !== "application/pdf" &&
-      !file.name.toLowerCase().endsWith(".pdf")
-    ) {
-      toast.error("File thủ tục bắt buộc phải là định dạng PDF");
-      e.target.value = "";
-      return;
-    }
+    const lowerName = file.name.toLowerCase();
+    const isPdf = lowerName.endsWith(".pdf") || file.type === "application/pdf";
+    const isDoc =
+      lowerName.endsWith(".doc") || file.type === "application/msword";
+    const isDocx =
+      lowerName.endsWith(".docx") ||
+      file.type ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    const isAllowedFile = isPdf || isDoc || isDocx;
 
-    if (
-      field === "templateFile" &&
-      !file.name.toLowerCase().endsWith(".doc") &&
-      !file.name.toLowerCase().endsWith(".docx") &&
-      !file.type.includes("word")
-    ) {
-      toast.error("File biểu mẫu bắt buộc phải là định dạng DOC hoặc DOCX");
+    if (!isAllowedFile) {
+      const fieldLabel = field === "procedureFile" ? "thủ tục" : "biểu mẫu";
+      toast.error(
+        `File ${fieldLabel} chỉ được phép định dạng PDF, DOC hoặc DOCX`,
+      );
       e.target.value = "";
       return;
     }
@@ -580,7 +580,7 @@ export default function QuanLyThuTuc() {
               công.
             </SheetDescription>
           </SheetHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid flex-1 auto-rows-min gap-6 px-4">
             <div className="grid gap-2">
               <Label>
                 Mã Lĩnh vực <span className="text-red-500">*</span>
@@ -622,21 +622,19 @@ export default function QuanLyThuTuc() {
               />
             </div>
           </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setIsFieldSheetOpen(false)}
-            >
-              Hủy
-            </Button>
+          <div className="flex justify-end gap-2 mt-4"></div>
+          <SheetFooter>
             <Button onClick={handleSaveField}>Lưu Lĩnh vực</Button>
-          </div>
+            <SheetClose asChild>
+              <Button variant="outline">Huỷ</Button>
+            </SheetClose>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
 
       {/* Procedure/Service Sheet */}
       <Sheet open={isProcedureSheetOpen} onOpenChange={setIsProcedureSheetOpen}>
-        <SheetContent className="sm:max-w-[500px] overflow-y-auto">
+        <SheetContent className=" overflow-y-auto">
           <SheetHeader>
             <SheetTitle>
               {currentProcedure.serviceId
@@ -647,8 +645,8 @@ export default function QuanLyThuTuc() {
               Khai báo mã thủ tục và tên của Thủ tục phục vụ Đăng ký.
             </SheetDescription>
           </SheetHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
+          <div className="grid flex-1 auto-rows-min gap-6 px-4">
+            <div className="grid gap-3">
               <Label>
                 Lĩnh vực <span className="text-red-500">*</span>
               </Label>
@@ -728,14 +726,13 @@ export default function QuanLyThuTuc() {
               />
             </div>
             <div className="grid gap-2">
-              <Label>Link File Thủ tục (Upload trực tiếp định dạng .PDF)</Label>
+              <Label>Tải file Thủ tục (định dạng .PDF / .DOC / .DOCX)</Label>
               <div className="flex gap-2">
                 <Input
                   type="file"
-                  accept=".pdf,application/pdf"
+                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   onChange={(e) => handleFileUpload(e, "procedureFile")}
                   className="w-1/3 cursor-pointer"
-                  title="Chọn file thủ tục"
                 />
                 <Input
                   value={
@@ -749,19 +746,18 @@ export default function QuanLyThuTuc() {
                       procedureFileUrl: e.target.value,
                     })
                   }
-                  placeholder="Hoặc dán URL vào đây (vd: /docs/hd.pdf)"
+                  disabled
+                  readOnly
                   className="flex-1"
                 />
               </div>
             </div>
             <div className="grid gap-2">
-              <Label>
-                Link File Biểu mẫu (Upload trực tiếp định dạng .DOC / .DOCX)
-              </Label>
+              <Label>Tải file Biểu mẫu (định dạng .DOC / .DOCX)</Label>
               <div className="flex gap-2">
                 <Input
                   type="file"
-                  accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   onChange={(e) => handleFileUpload(e, "templateFile")}
                   className="w-1/3 cursor-pointer"
                   title="Chọn file biểu mẫu"
@@ -778,21 +774,19 @@ export default function QuanLyThuTuc() {
                       templateFileUrl: e.target.value,
                     })
                   }
-                  placeholder="Hoặc dán URL vào đây."
+                  disabled
+                  readOnly
                   className="flex-1"
                 />
               </div>
             </div>
           </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setIsProcedureSheetOpen(false)}
-            >
-              Hủy
-            </Button>
+          <SheetFooter>
             <Button onClick={handleSaveProcedure}>Lưu Thủ tục</Button>
-          </div>
+            <SheetClose asChild>
+              <Button variant="outline">Huỷ</Button>
+            </SheetClose>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
     </div>

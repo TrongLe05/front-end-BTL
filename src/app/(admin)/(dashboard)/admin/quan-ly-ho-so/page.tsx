@@ -30,7 +30,7 @@ import {
   fetchAdminApplications,
   updateAdminApplicationStatus,
 } from "@/lib/api/admin-applications";
-
+import { getDocumentViewerUrl } from "@/lib/utils/document-viewer";
 type BackendApplicationStatus =
   | "Submitted"
   | "Processing"
@@ -544,7 +544,9 @@ export default function Page() {
                                   </p>
                                   {item.attachedFileUrl ? (
                                     <a
-                                      href={item.attachedFileUrl}
+                                      href={getDocumentViewerUrl(
+                                        item.attachedFileUrl,
+                                      )}
                                       target="_blank"
                                       rel="noreferrer"
                                       className="text-xs text-blue-600 hover:underline"
