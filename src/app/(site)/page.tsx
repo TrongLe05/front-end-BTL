@@ -435,7 +435,12 @@ export default async function Home() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-3">
-                <Button asChild size="lg" className="w-full">
+                <Button
+                  asChild
+                  size="lg"
+                  variant="secondary"
+                  className="w-full bg-pink-600 hover:bg-pink-700 text-white"
+                >
                   <Link href="/lien-he">Gửi phản ánh</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="w-full">

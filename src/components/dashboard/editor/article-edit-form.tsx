@@ -349,9 +349,7 @@ export function ArticleEditForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Draft">Nháp</SelectItem>
-                <SelectItem value="PendingApproval">Chờ duyệt</SelectItem>
                 <SelectItem value="Published">Xuất bản</SelectItem>
-                <SelectItem value="Rejected">Từ chối</SelectItem>
               </SelectContent>
             </Select>
           </div>
