@@ -1,5 +1,10 @@
-import { NextResponse } from "next/server";
-import { google } from "googleapis";
+import { BetaAnalyticsDataClient } from "@google-analytics/data";
+import { NextRequest, NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+
+type RangeDays = 7 | 14 | 30;
+type AnalyticsGranularity = "day" | "hour";
 
 type AnalyticsPoint = {
   date: string;
@@ -13,90 +18,81 @@ type TopPage = {
   views: number;
 };
 
-type AnalyticsPayload = {
-  ok: boolean;
-  rangeDays: number;
-  measurementId: string | null;
-  propertyId: string;
-  points: AnalyticsPoint[];
-  topPages: TopPage[];
-  summary: {
-    totalSessions: number;
-    totalArticleViews: number;
-    totalUsers: number;
-  };
-  source: "ga-data-api";
-  message?: string;
-  generatedAt: string;
-};
+function toRangeDays(value: string | null): RangeDays {
+  const parsed = Number(value ?? "7");
+  if (parsed === 14 || parsed === 30) {
+    return parsed;
+  }
 
-function parseRangeDays(rawRange: string | null): 7 | 14 | 30 {
-  if (rawRange === "14") {
-    return 14;
-  }
-  if (rawRange === "30") {
-    return 30;
-  }
   return 7;
 }
 
-function readEnv(keys: string[]): string | undefined {
+function toGranularity(value: string | null): AnalyticsGranularity {
+  return value === "hour" ? "hour" : "day";
+}
+
+function readEnv(keys: string[]): string | null {
   for (const key of keys) {
-    const value = process.env[key];
-    if (value && value.trim()) {
-      return value.trim();
+    const value = process.env[key]?.trim();
+    if (value) {
+      return value;
     }
   }
-  return undefined;
+
+  return null;
 }
 
-function gaDateToIso(value: string): string {
-  if (value.length !== 8) {
-    return value;
+function normalizePrivateKey(rawValue: string): string {
+  // Support escaped newlines in .env.local secrets.
+  return rawValue.replace(/\\n/g, "\n");
+}
+
+function toIsoDateFromGa(gaDate: string): string {
+  if (!/^\d{8}$/.test(gaDate)) {
+    return gaDate;
   }
 
-  return `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
+  const year = gaDate.slice(0, 4);
+  const month = gaDate.slice(4, 6);
+  const day = gaDate.slice(6, 8);
+  return `${year}-${month}-${day}`;
 }
 
-function toMetricNumber(value: string | null | undefined): number {
-  const parsed = Number(value ?? "0");
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function asErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
+function toIsoDateHourFromGa(gaDateHour: string): string {
+  if (!/^\d{10}$/.test(gaDateHour)) {
+    return gaDateHour;
   }
-  return "Khong the tai du lieu Google Analytics";
+
+  const year = gaDateHour.slice(0, 4);
+  const month = gaDateHour.slice(4, 6);
+  const day = gaDateHour.slice(6, 8);
+  const hour = gaDateHour.slice(8, 10);
+
+  return `${year}-${month}-${day} ${hour}:00`;
 }
 
-export const runtime = "nodejs";
+export async function GET(request: NextRequest) {
+  const rangeDays = toRangeDays(request.nextUrl.searchParams.get("range"));
+  const granularity = toGranularity(
+    request.nextUrl.searchParams.get("granularity"),
+  );
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const rangeDays = parseRangeDays(searchParams.get("range"));
-
+  const measurementId = readEnv(["NEXT_PUBLIC_GA_ID", "GA_MEASUREMENT_ID"]);
   const propertyId = readEnv([
     "GA4_PROPERTY_ID",
-    "GOOGLE_ANALYTICS_PROPERTY_ID",
+    "NEXT_PUBLIC_GA4_PROPERTY_ID",
   ]);
-  const clientEmail = readEnv([
-    "GA_SERVICE_ACCOUNT_EMAIL",
-    "GOOGLE_SERVICE_ACCOUNT_EMAIL",
-  ]);
-  const privateKey = readEnv([
-    "GA_SERVICE_ACCOUNT_PRIVATE_KEY",
-    "GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY",
-  ]);
-  const measurementId =
-    readEnv(["NEXT_PUBLIC_GA_ID", "GA_MEASUREMENT_ID"]) ?? null;
+  const clientEmail = readEnv(["GOOGLE_CLIENT_EMAIL"]);
+  const privateKeyRaw = readEnv(["GOOGLE_PRIVATE_KEY"]);
 
-  if (!propertyId || !clientEmail || !privateKey) {
+  if (!measurementId || !propertyId || !clientEmail || !privateKeyRaw) {
     return NextResponse.json(
       {
         ok: false,
+        message: "Thiếu cấu hình Google Analytics trong biến môi trường.",
         rangeDays,
-        measurementId,
+        granularity,
+        measurementId: measurementId ?? null,
         propertyId: propertyId ?? null,
         points: [],
         topPages: [],
@@ -106,8 +102,6 @@ export async function GET(request: Request) {
           totalUsers: 0,
         },
         source: "ga-data-api",
-        message:
-          "Thieu cau hinh GA Data API. Can GA4_PROPERTY_ID, GA_SERVICE_ACCOUNT_EMAIL, GA_SERVICE_ACCOUNT_PRIVATE_KEY.",
         generatedAt: new Date().toISOString(),
       },
       { status: 500 },
@@ -115,112 +109,120 @@ export async function GET(request: Request) {
   }
 
   try {
-    const auth = new google.auth.JWT({
-      email: clientEmail,
-      key: privateKey.replace(/\\n/g, "\n"),
-      scopes: ["https://www.googleapis.com/auth/analytics.readonly"],
+    const client = new BetaAnalyticsDataClient({
+      credentials: {
+        client_email: clientEmail,
+        private_key: normalizePrivateKey(privateKeyRaw),
+      },
     });
 
-    const analyticsData = google.analyticsdata({
-      version: "v1beta",
-      auth,
+    const [trafficReport] = await client.runReport({
+      property: `properties/${propertyId}`,
+      dateRanges: [
+        {
+          startDate:
+            granularity === "hour" ? "1daysAgo" : `${rangeDays}daysAgo`,
+          endDate: "today",
+        },
+      ],
+      dimensions: [{ name: granularity === "hour" ? "dateHour" : "date" }],
+      metrics: [
+        { name: "sessions" },
+        { name: "totalUsers" },
+        { name: "screenPageViews" },
+      ],
+      orderBys: [
+        {
+          dimension: {
+            dimensionName: granularity === "hour" ? "dateHour" : "date",
+          },
+        },
+      ],
     });
 
-    const [timelineResponse, topPagesResponse] = await Promise.all([
-      analyticsData.properties.runReport({
-        property: `properties/${propertyId}`,
-        requestBody: {
-          dateRanges: [
-            {
-              startDate: `${rangeDays}daysAgo`,
-              endDate: "today",
-            },
-          ],
-          dimensions: [{ name: "date" }],
-          metrics: [
-            { name: "sessions" },
-            { name: "activeUsers" },
-            { name: "screenPageViews" },
-          ],
-          orderBys: [
-            {
-              dimension: {
-                dimensionName: "date",
-              },
-            },
-          ],
-          keepEmptyRows: true,
+    const [topPagesReport] = await client.runReport({
+      property: `properties/${propertyId}`,
+      dateRanges: [
+        {
+          startDate:
+            granularity === "hour" ? "1daysAgo" : `${rangeDays}daysAgo`,
+          endDate: "today",
         },
-      }),
-      analyticsData.properties.runReport({
-        property: `properties/${propertyId}`,
-        requestBody: {
-          dateRanges: [
-            {
-              startDate: `${rangeDays}daysAgo`,
-              endDate: "today",
-            },
-          ],
-          dimensions: [{ name: "pagePath" }],
-          metrics: [{ name: "screenPageViews" }],
-          orderBys: [
-            {
-              metric: {
-                metricName: "screenPageViews",
-              },
-              desc: true,
-            },
-          ],
-          limit: "8",
+      ],
+      dimensions: [{ name: "pagePath" }],
+      metrics: [{ name: "screenPageViews" }],
+      orderBys: [
+        {
+          metric: {
+            metricName: "screenPageViews",
+          },
+          desc: true,
         },
-      }),
-    ]);
+      ],
+      limit: 50,
+    });
 
-    const points: AnalyticsPoint[] = (timelineResponse.data.rows ?? []).map(
-      (row) => {
-        const dateRaw = row.dimensionValues?.[0]?.value ?? "";
-        return {
-          date: gaDateToIso(dateRaw),
-          sessions: toMetricNumber(row.metricValues?.[0]?.value),
-          users: toMetricNumber(row.metricValues?.[1]?.value),
-          articleViews: toMetricNumber(row.metricValues?.[2]?.value),
-        };
+    const points: AnalyticsPoint[] = (trafficReport.rows ?? []).map((row) => {
+      const rawDate = row.dimensionValues?.[0]?.value ?? "";
+      const sessions = Number(row.metricValues?.[0]?.value ?? "0");
+      const users = Number(row.metricValues?.[1]?.value ?? "0");
+      const pageViews = Number(row.metricValues?.[2]?.value ?? "0");
+
+      return {
+        date:
+          granularity === "hour"
+            ? toIsoDateHourFromGa(rawDate)
+            : toIsoDateFromGa(rawDate),
+        sessions,
+        users,
+        articleViews: pageViews,
+      };
+    });
+
+    const topPages: TopPage[] = (topPagesReport.rows ?? [])
+      .map((row) => ({
+        page: row.dimensionValues?.[0]?.value ?? "",
+        views: Number(row.metricValues?.[0]?.value ?? "0"),
+      }))
+      .filter((item) => item.page.startsWith("/tin-tuc"))
+      .slice(0, 10);
+
+    const summary = points.reduce(
+      (acc, item) => {
+        acc.totalSessions += item.sessions;
+        acc.totalArticleViews += item.articleViews;
+        acc.totalUsers += item.users;
+        return acc;
+      },
+      {
+        totalSessions: 0,
+        totalArticleViews: 0,
+        totalUsers: 0,
       },
     );
 
-    const topPages: TopPage[] = (topPagesResponse.data.rows ?? [])
-      .map((row) => {
-        const page = row.dimensionValues?.[0]?.value ?? "(khong ro)";
-        const views = toMetricNumber(row.metricValues?.[0]?.value);
-        return { page, views };
-      })
-      .filter((item) => item.views > 0);
-
-    const payload: AnalyticsPayload = {
+    return NextResponse.json({
       ok: true,
       rangeDays,
+      granularity,
       measurementId,
       propertyId,
       points,
       topPages,
-      summary: {
-        totalSessions: points.reduce((sum, item) => sum + item.sessions, 0),
-        totalArticleViews: points.reduce(
-          (sum, item) => sum + item.articleViews,
-          0,
-        ),
-        totalUsers: points.reduce((sum, item) => sum + item.users, 0),
-      },
+      summary,
       source: "ga-data-api",
       generatedAt: new Date().toISOString(),
-    };
-
-    return NextResponse.json(payload);
-  } catch (error: unknown) {
+    });
+  } catch (error) {
     return NextResponse.json(
       {
         ok: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Không thể lấy dữ liệu từ Google Analytics Data API.",
         rangeDays,
+        granularity,
         measurementId,
         propertyId,
         points: [],
@@ -231,7 +233,6 @@ export async function GET(request: Request) {
           totalUsers: 0,
         },
         source: "ga-data-api",
-        message: asErrorMessage(error),
         generatedAt: new Date().toISOString(),
       },
       { status: 500 },

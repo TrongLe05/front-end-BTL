@@ -3,6 +3,8 @@ import { getPublicArticles } from "@/lib/api/article";
 import { Article } from "@/types";
 import Image from "next/image";
 import { API_BASE_URL } from "@/lib/api/config";
+import type { Metadata } from "next";
+import { generatePageMetadata } from "@/lib/seo";
 import { BellRing, CalendarDays, Newspaper } from "lucide-react";
 import {
   Card,
@@ -14,7 +16,20 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { NewsCategorySelect } from "@/components/site/news-category-select";
 
+export const metadata: Metadata = generatePageMetadata({
+  title: "Tin Tức & Thông Báo | Phường Cao Lãnh",
+  description:
+    "Cập nhật tin tức, thông báo và sự kiện mới nhất từ Phường Cao Lãnh. Thông tin chính thống từ chính quyền địa phương.",
+  keywords: ["tin tức", "thông báo", "Phường Cao Lãnh", "Cao Lãnh", "sự kiện"],
+  url: "/tin-tuc",
+});
+
+// ISR - Revalidate every 5 minutes (300 seconds)
+// This page will be statically generated and revalidated in the background
 export const revalidate = 300;
+
+// Use dynamic rendering for query parameters
+export const dynamic = "force-dynamic";
 
 type TinTucPageProps = {
   searchParams: Promise<{
@@ -128,7 +143,7 @@ export default async function TinTuc({ searchParams }: TinTucPageProps) {
                 <Link
                   href={`/tin-tuc/${article.articleId}`}
                   key={article.articleId}
-                  className="hover:text-pink-600 transition-colors duration-100"
+                  className="hover:text-pink-600 transition-colors duration-100 "
                 >
                   <Card className="group h-full gap-0 overflow-hidden rounded-3xl bg-[#f3f5f4] py-0 shadow-[0_12px_32px_rgba(15,23,42,0.08)] ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(15,23,42,0.14)]">
                     <div className="relative aspect-video w-full overflow-hidden">

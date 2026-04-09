@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { Metadata } from "next";
+import { generatePageMetadata } from "@/lib/seo";
 import { API_BASE_URL } from "@/lib/api/config";
 import { Camera, FolderOpen, Images } from "lucide-react";
 import { Badge } from "@/components/ui/badge";

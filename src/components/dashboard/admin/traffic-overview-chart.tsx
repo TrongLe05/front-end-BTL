@@ -123,7 +123,7 @@ export function TrafficOverviewChart({
   };
 
   return (
-    <div className="h-[320px] w-full">
+    <div className="h-80 w-full">
       <Line data={data} options={options} />
     </div>
   );
