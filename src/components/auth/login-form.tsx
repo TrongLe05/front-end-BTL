@@ -185,9 +185,6 @@ export function LoginForm({
                 >
                   {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
                 </Button>
-                <Button variant="outline" type="button" disabled={isSubmitting}>
-                  Đăng nhập với Google
-                </Button>
 
                 <FieldDescription className="text-center">
                   Chưa có tài khoản?
